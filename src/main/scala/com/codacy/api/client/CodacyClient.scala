@@ -18,7 +18,7 @@ class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = Non
 
   // "https://www.codacy.com/api/2.0"
 
-  private val remoteUrl = apiUrl.getOrElse("http://localhost:9000/api/2.0")
+  private val remoteUrl = apiUrl.getOrElse("http://localhost:9000") + "/api/2.0"
 
   /*
    * Does an API request and parses the json output into a class

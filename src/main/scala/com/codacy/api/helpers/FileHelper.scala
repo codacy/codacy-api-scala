@@ -16,37 +16,6 @@ import scala.io.{Codec, Source}
 object FileHelper {
 
   private val currentPath = Paths.get("").toAbsolutePath
-  private val outputDirectory = new File(currentPath.toFile, "target/codacy-report")
-
-  def writeReportToFile(report: ResultReport): Either[String, Boolean] = {
-    outputDirectory.mkdirs()
-    val randomUUID = UUID.randomUUID().toString
-    val outputFile = new File(outputDirectory, s"codacy-report-$randomUUID.json")
-    Right(writeJsonToFile(outputFile, report))
-  }
-
-  def sendReport(apiUrl: Option[String] = None, projectTokenOpt: Option[String] = None,
-                 commitUUIDOpt: Option[String] = None): Either[String, Boolean] = {
-    withTokenAndCommit(projectTokenOpt, commitUUIDOpt) {
-      case (projectToken, commitUUID) =>
-        val codacyClient = new CodacyClient(apiUrl = apiUrl, projectToken = Some(projectToken))
-        val resultServices = new ResultServices(codacyClient)
-
-        val requestResponses = readReports(commitUUID).map { resultReport =>
-          val response = resultServices.sendResults(commitUUID, resultReport)
-          response match {
-            case requestResponse if requestResponse.hasError => Left(requestResponse.message)
-            case _ => Right(true)
-          }
-        }
-
-        FileUtils.delete(outputDirectory, FileUtils.RECURSIVE + FileUtils.IGNORE_ERRORS)
-
-        requestResponses
-          .collectFirst { case Left(message) => Left(message) }
-          .getOrElse(Right(true))
-    }
-  }
 
   def withTokenAndCommit[T](projectToken: Option[String] = None, commitUUID: Option[String] = None)
                            (block: (String, String) => Either[String, T]): Either[String, T] = {
@@ -72,20 +41,7 @@ object FileHelper {
     }
   }
 
-  private def readReports(commitUUID: String): Seq[ResultReport] = {
-    val allReports = outputDirectory.list.toSeq.flatMap { file =>
-      val reportFile = new File(outputDirectory, file)
-      readJsonFromFile[ResultReport](reportFile).filter(_.commitUUID == commitUUID)
-    }
-
-    allReports.groupBy(_.algorithmUUID).map { case (algoUUID, algoReports) =>
-      val results = algoReports.map(_.results).reduceOption(_ ++ _).getOrElse(Seq.empty)
-      val distinctResults = results.distinct
-      ResultReport(algoUUID, commitUUID, distinctResults)
-    }.toSeq
-  }
-
-  private def readJsonFromFile[A](file: File)(implicit fmt: Format[A]): Option[A] = {
+  def readJsonFromFile[A](file: File)(implicit fmt: Format[A]): Option[A] = {
     val source = Source.fromFile(file)(Codec.UTF8)
     val lines = try {
       source.mkString
@@ -93,7 +49,7 @@ object FileHelper {
     Json.parse(lines).asOpt[A]
   }
 
-  private def writeJsonToFile[A](file: File, value: A)(implicit fmt: Format[A]) = {
+  def writeJsonToFile[A](file: File, value: A)(implicit fmt: Format[A]) = {
     val reportJson = Json.toJson(value).toString()
     val printWriter = new PrintWriter(file)
     val result = util.Try(printWriter.write(reportJson)).isSuccess
