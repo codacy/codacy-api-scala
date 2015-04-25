@@ -49,7 +49,7 @@ object ResultHelper {
           }
         }
 
-        // Probably shouldn't be deleted. Useful for debug. Create a clean task instead.
+        // TODO: Probably shouldn't be deleted. Useful for debug. Create a clean task instead.
         FileUtils.delete(outputDirectory, FileUtils.RECURSIVE + FileUtils.IGNORE_ERRORS)
 
         requestResponses

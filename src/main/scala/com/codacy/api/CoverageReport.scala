@@ -4,7 +4,7 @@ import play.api.libs.json._
 
 case class CoverageFileReport(filename: String, total: Int, coverage: Map[Int, Int])
 
-case class CoverageReport(total: Int, fileReports: Seq[CoverageFileReport])
+case class CoverageReport(language: Language.Value, total: Int, fileReports: Seq[CoverageFileReport])
 
 object CoverageReport {
 
