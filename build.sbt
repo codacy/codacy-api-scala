@@ -9,7 +9,7 @@ name := """codacy-api-scala"""
 
 version := "1.0.0"
 
-scalaVersion := "2.11.6"
+scalaVersion := "2.10.5"
 
 crossScalaVersions := Seq("2.10.5", "2.11.6")
 

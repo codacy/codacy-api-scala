@@ -66,13 +66,6 @@ class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = Non
     if (Seq(HTTPStatusCodes.OK, HTTPStatusCodes.CREATED).contains(result.status)) {
       val body = result.body
 
-      /* TODO: remove this when not needed (only keep for debug purposes) */
-      //    println("\n\n")
-      //    println(s"STATUS: ${result.status}")
-      //    println("\n\n")
-      //    println(body)
-      //    println("\n\n")
-
       val jsValue = parseJson(body)
       jsValue match {
         case Right(responseObj) =>
@@ -95,13 +88,6 @@ class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = Non
 
     if (Seq(HTTPStatusCodes.OK, HTTPStatusCodes.CREATED).contains(result.status)) {
       val body = result.body
-
-      /* TODO: remove this when not needed (only keep for debug purposes) */
-      //      println("\n\n")
-      //      println(s"STATUS: ${result.status}")
-      //      println("\n\n")
-      //      println(body)
-      //      println("\n\n")
 
       parseJson(body)
     } else {
