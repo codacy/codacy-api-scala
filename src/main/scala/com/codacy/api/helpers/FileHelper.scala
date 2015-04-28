@@ -2,13 +2,8 @@ package com.codacy.api.helpers
 
 import java.io.{File, PrintWriter}
 import java.nio.file.Paths
-import java.util.UUID
 
-import com.codacy.api.ResultReport
-import com.codacy.api.client.CodacyClient
 import com.codacy.api.helpers.vcs.GitClient
-import com.codacy.api.service.ResultServices
-import org.eclipse.jgit.util.FileUtils
 import play.api.libs.json.{Format, Json}
 
 import scala.io.{Codec, Source}
