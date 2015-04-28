@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/codacy/bitbucket-scala-client.svg)](https://travis-ci.org/codacy/codacy-api-scala)
+[![Build Status](https://travis-ci.org/codacy/codacy-api-scala.svg?branch=master)](https://travis-ci.org/codacy/codacy-api-scala)
 [![Codacy Badge](https://www.codacy.com/project/badge/650fe924dba349458ee29d44f07dae6c)](https://www.codacy.com/app/Codacy/codacy-api-scala)
 
 # Codacy API Scala Client
