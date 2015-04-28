@@ -9,7 +9,7 @@ This is a simple library that aims to have basic functions of the Codacy API.
 
 Import on SBT:
 
-    "com.codacy" % "codacy-api-scala_2.11" % "1.0"
+    "com.codacy" %% "codacy-api-scala" % "1.0.0"
 
 ### Creators
 
