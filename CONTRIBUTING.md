@@ -1,7 +1,7 @@
 # Contributing
 
 One of the great things about open source projects is that anyone can contribute code.
-bitbucket-scala-client is a small project and we want to encourage everyone to submit their
+codacy-api-scala is a small project and we want to encourage everyone to submit their
 patches freely. To help you in that process, there are several things that you should keep in mind.
 
 ## Use Pull Requests
@@ -20,6 +20,6 @@ appropriate unit tests.
 ## Testing
 
 Along with submitting unit tests, please make sure that you have used the built-in
-testing capabilities in the bitbucket-scala-client build system. At a minimum, you should
-run `activator test`. That generates all of the built files and runs all of the unit tests
+testing capabilities in the codacy-api-scala build system. At a minimum, you should
+run `sbt test`. That generates all of the built files and runs all of the unit tests
 in the project.
