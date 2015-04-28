@@ -1,9 +1,15 @@
 import sbt._
 
 resolvers ++= Seq(
-  "Typesafe repository" at "https://repo.typesafe.com/typesafe/releases/",
-  "Era7 maven releases" at "http://releases.era7.com.s3.amazonaws.com"
+  DefaultMavenRepository,
+  "Typesafe Repository" at "https://repo.typesafe.com/typesafe/releases/",
+  "Sonatype snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/",
+  Classpaths.typesafeReleases,
+  Classpaths.sbtPluginReleases
 )
 
-// Codacy private repo
-addSbtPlugin("ohnosequences" % "sbt-s3-resolver" % "0.12.0")
+addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "0.2.1")
+
+addSbtPlugin("com.typesafe.sbt" % "sbt-pgp" % "0.8.3")
+
+addSbtPlugin("com.timushev.sbt" % "sbt-updates" % "0.1.8")
