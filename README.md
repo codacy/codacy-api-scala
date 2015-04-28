@@ -3,7 +3,7 @@
 
 # Codacy API Scala Client
 
-Java wrapper for the Codacy API.
+Scala wrapper for the Codacy API.
 
 ### Usage
 
