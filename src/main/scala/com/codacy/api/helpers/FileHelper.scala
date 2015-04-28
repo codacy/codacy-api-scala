@@ -1,7 +1,6 @@
 package com.codacy.api.helpers
 
 import java.io.{File, PrintWriter}
-import java.nio.file.Paths
 
 import com.codacy.api.helpers.vcs.GitClient
 import play.api.libs.json.{Format, Json}
@@ -10,7 +9,7 @@ import scala.io.{Codec, Source}
 
 object FileHelper {
 
-  private val currentPath = Paths.get("").toAbsolutePath
+  private val currentPath = new File(System.getProperty("user.dir"))
 
   def withTokenAndCommit[T](projectToken: Option[String] = None, commitUUID: Option[String] = None)
                            (block: (String, String) => Either[String, T]): Either[String, T] = {

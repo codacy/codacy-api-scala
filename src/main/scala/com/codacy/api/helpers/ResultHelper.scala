@@ -1,7 +1,6 @@
 package com.codacy.api.helpers
 
 import java.io.File
-import java.nio.file.Paths
 import java.util.UUID
 
 import com.codacy.api.ResultReport
@@ -10,8 +9,8 @@ import com.codacy.api.service.ResultServices
 
 object ResultHelper {
 
-  private val currentPath = Paths.get("").toAbsolutePath
-  private val defaultOutputDirectory = new File(currentPath.toFile, "target/codacy-reports")
+  private val currentPath = new File(System.getProperty("user.dir"))
+  private val defaultOutputDirectory = new File(currentPath, "target/codacy-reports")
 
   def writeReportToFile(report: ResultReport, outputDirectory: Option[File] = None): Either[String, Boolean] = {
     val directory = outputDirectory.getOrElse(defaultOutputDirectory)
