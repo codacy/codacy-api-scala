@@ -12,6 +12,8 @@ crossScalaVersions := Seq("2.10.5", "2.11.6")
 
 scalacOptions := Seq("-deprecation", "-feature", "-unchecked", "-Ywarn-adapted-args", "-Xlint", "-Xfatal-warnings")
 
+resolvers += "Typesafe maven repository" at "http://repo.typesafe.com/typesafe/maven-releases/"
+
 libraryDependencies ++= Seq(
   jodaTime,
   playWS,
