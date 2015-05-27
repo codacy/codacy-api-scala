@@ -7,7 +7,7 @@ import play.api.libs.json.Json
 class ResultServices(client: CodacyClient) {
 
   def sendResults(commitUuid: String, resultReport: ResultReport): RequestResponse[RequestSuccess] = {
-    val endpoint = s"results/$commitUuid"
+    val endpoint = s"/commit/$commitUuid/results"
 
     val value = Json.toJson(resultReport).toString()
 
