@@ -4,7 +4,7 @@ import sbt._
 
 name := """codacy-api-scala"""
 
-version := "1.0.0"
+version := "1.0.1"
 
 scalaVersion := "2.10.5"
 
