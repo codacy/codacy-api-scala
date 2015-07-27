@@ -3,7 +3,6 @@ package com.codacy.api.client
 import com.codacy.api.util.HTTPStatusCodes
 import com.ning.http.client.AsyncHttpClient
 import play.api.libs.json.{JsValue, Json, Reads}
-import play.api.libs.ws.WSClient
 import play.api.libs.ws.ning.NingWSClient
 
 import scala.concurrent.Await
@@ -15,8 +14,6 @@ class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = Non
   private val tokens = Seq.empty[(String, String)] ++
     apiToken.map(t => ("api_token", t)) ++
     projectToken.map(t => ("project_token", t))
-
-  // "https://www.codacy.com/api/2.0"
 
   private val remoteUrl = apiUrl.getOrElse("http://localhost:9000") + "/api/2.0"
 
@@ -53,45 +50,45 @@ class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = Non
    * Does an API post
    */
   def post[T](request: Request[T], value: String)(implicit reader: Reads[T]): RequestResponse[T] = {
-    val client: WSClient = new NingWSClient(new AsyncHttpClient().getConfig)
+    withWSClient { client =>
+      val headers = tokens ++ Seq(("Content-Type", "application/json"))
 
-    val headers = tokens ++ Seq(("Content-Type", "application/json"))
+      val jpromise = client.url(s"$remoteUrl/${request.endpoint}")
+        .withHeaders(headers: _*)
+        .withFollowRedirects(follow = true)
+        .post(value)
+      val result = Await.result(jpromise, Duration(10, SECONDS))
 
-    val jpromise = client.url(s"$remoteUrl/${request.endpoint}")
-      .withHeaders(headers: _*)
-      .withFollowRedirects(follow = true)
-      .post(value)
-    val result = Await.result(jpromise, Duration(10, SECONDS))
+      if (Seq(HTTPStatusCodes.OK, HTTPStatusCodes.CREATED).contains(result.status)) {
+        val body = result.body
 
-    if (Seq(HTTPStatusCodes.OK, HTTPStatusCodes.CREATED).contains(result.status)) {
-      val body = result.body
-
-      val jsValue = parseJson(body)
-      jsValue match {
-        case Right(responseObj) =>
-          RequestResponse(responseObj.asOpt[T])
-        case Left(message) =>
-          RequestResponse(None, message = message.detail, hasError = true)
+        val jsValue = parseJson(body)
+        jsValue match {
+          case Right(responseObj) =>
+            RequestResponse(responseObj.asOpt[T])
+          case Left(message) =>
+            RequestResponse(None, message = message.detail, hasError = true)
+        }
+      } else {
+        RequestResponse(None, result.statusText, hasError = true)
       }
-    } else {
-      RequestResponse(None, result.statusText, hasError = true)
     }
   }
 
   private def get(endpoint: String): Either[ResponseError, JsValue] = {
-    val client: WSClient = new NingWSClient(new AsyncHttpClient().getConfig)
+    withWSClient { client =>
+      val jpromise = client.url(s"$remoteUrl/$endpoint")
+        .withHeaders(tokens: _*)
+        .withFollowRedirects(follow = true).get()
+      val result = Await.result(jpromise, Duration(10, SECONDS))
 
-    val jpromise = client.url(s"$remoteUrl/$endpoint")
-      .withHeaders(tokens: _*)
-      .withFollowRedirects(follow = true).get()
-    val result = Await.result(jpromise, Duration(10, SECONDS))
+      if (Seq(HTTPStatusCodes.OK, HTTPStatusCodes.CREATED).contains(result.status)) {
+        val body = result.body
 
-    if (Seq(HTTPStatusCodes.OK, HTTPStatusCodes.CREATED).contains(result.status)) {
-      val body = result.body
-
-      parseJson(body)
-    } else {
-      Left(ResponseError(java.util.UUID.randomUUID().toString, result.statusText, result.statusText))
+        parseJson(body)
+      } else {
+        Left(ResponseError(java.util.UUID.randomUUID().toString, result.statusText, result.statusText))
+      }
     }
   }
 
@@ -104,5 +101,12 @@ class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = Non
       error =>
         Left(error)
     }.getOrElse(Right(json))
+  }
+
+  private def withWSClient[T](block: NingWSClient => T): T = {
+    val client = new NingWSClient(new AsyncHttpClient().getConfig)
+    val result = block(client)
+    client.close()
+    result
   }
 }

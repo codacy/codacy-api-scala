@@ -7,6 +7,6 @@ object Dependencies {
   lazy val jgit     = "org.eclipse.jgit"   % "org.eclipse.jgit" % "3.6.2.201501210735-r"
 
   // Play framework
-  lazy val playWS   = "com.typesafe.play" %% "play-ws"          % "2.3.8"
+  lazy val playWS   = "com.typesafe.play" %% "play-ws"          % "2.3.9"
 
 }

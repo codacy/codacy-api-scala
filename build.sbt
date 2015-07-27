@@ -4,11 +4,11 @@ import sbt._
 
 name := """codacy-api-scala"""
 
-version := "1.0.1"
+version := "1.0.2"
 
 scalaVersion := "2.10.5"
 
-crossScalaVersions := Seq("2.10.5", "2.11.6")
+crossScalaVersions := Seq("2.10.5", "2.11.7")
 
 scalacOptions := Seq("-deprecation", "-feature", "-unchecked", "-Ywarn-adapted-args", "-Xlint", "-Xfatal-warnings")
 
