@@ -24,7 +24,7 @@ organization := "com.codacy"
 
 organizationName := "Codacy"
 
-organizationHomepage := Some(new URL("https://www.codacy.com"))
+organizationHomepage := Some(new URL("https://api.codacy.com"))
 
 publishMavenStyle := true
 
