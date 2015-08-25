@@ -15,7 +15,7 @@ class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = Non
     apiToken.map(t => ("api_token", t)) ++
     projectToken.map(t => ("project_token", t))
 
-  private val remoteUrl = apiUrl.getOrElse("http://localhost:9000") + "/api/2.0"
+  private val remoteUrl = apiUrl.getOrElse("http://localhost:9000") + "/2.0"
 
   /*
    * Does an API request and parses the json output into a class
