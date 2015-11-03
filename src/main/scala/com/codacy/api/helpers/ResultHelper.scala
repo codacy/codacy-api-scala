@@ -12,12 +12,12 @@ object ResultHelper {
   private val currentPath = new File(System.getProperty("user.dir"))
   private val defaultOutputDirectory = new File(currentPath, "target/codacy-reports")
 
-  def writeReportToFile(report: ResultReport, outputDirectory: Option[File] = None): Either[String, Boolean] = {
+  def writeReportToFile(report: ResultReport, outputDirectory: Option[File] = None): Boolean = {
     val directory = outputDirectory.getOrElse(defaultOutputDirectory)
     directory.mkdirs()
     val randomUUID = UUID.randomUUID().toString
     val outputFile = new File(directory, s"codacy-report-$randomUUID.json")
-    Right(FileHelper.writeJsonToFile(outputFile, report))
+    FileHelper.writeJsonToFile(outputFile, report)
   }
 
   def sendReport(outputDirectories: Option[Seq[File]] = None, apiUrl: Option[String] = None,
@@ -45,12 +45,12 @@ object ResultHelper {
   private def readReports(commitUUID: String, outputDirectories: Option[Seq[File]] = None): Seq[ResultReport] = {
     val directories = outputDirectories.getOrElse(Seq(defaultOutputDirectory))
 
-    val allReports = directories.map { directory =>
+    val allReports = directories.flatMap { directory =>
       directory.list.toSeq.flatMap { file =>
         val reportFile = new File(directory, file)
         FileHelper.readJsonFromFile[ResultReport](reportFile).filter(_.commitUUID == commitUUID)
       }
-    }.flatten
+    }
 
     allReports.groupBy(_.algorithmUUID).map { case (algoUUID, algoReports) =>
       val results = algoReports.map(_.results).reduceOption(_ ++ _).getOrElse(Seq.empty)

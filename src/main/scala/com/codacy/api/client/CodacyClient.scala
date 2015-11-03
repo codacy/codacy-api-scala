@@ -23,7 +23,7 @@ class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = Non
   def execute[T](request: Request[T])(implicit reader: Reads[T]): RequestResponse[T] = {
     get(request.endpoint) match {
       case Right(json) => RequestResponse(json.asOpt[T])
-      case Left(error) => RequestResponse(None, error.detail, hasError = true)
+      case Left(error) => RequestResponse(None, error.error, hasError = true)
     }
   }
 
@@ -42,7 +42,7 @@ class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = Non
         RequestResponse(Some((json \ "values").as[Seq[T]] ++ nextRepos))
 
       case Left(error) =>
-        RequestResponse[Seq[T]](None, error.detail, hasError = true)
+        RequestResponse[Seq[T]](None, error.error, hasError = true)
     }
   }
 
@@ -67,7 +67,7 @@ class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = Non
           case Right(responseObj) =>
             RequestResponse(responseObj.asOpt[T])
           case Left(message) =>
-            RequestResponse(None, message = message.detail, hasError = true)
+            RequestResponse(None, message = message.error, hasError = true)
         }
       } else {
         RequestResponse(None, result.statusText, hasError = true)
@@ -87,7 +87,7 @@ class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = Non
 
         parseJson(body)
       } else {
-        Left(ResponseError(java.util.UUID.randomUUID().toString, result.statusText, result.statusText))
+        Left(ResponseError(result.statusText))
       }
     }
   }

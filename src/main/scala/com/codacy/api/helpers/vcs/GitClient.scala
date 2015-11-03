@@ -8,9 +8,9 @@ import org.eclipse.jgit.lib.RepositoryBuilder
 import scala.collection.JavaConversions._
 import scala.util.Try
 
-class GitClient(cwd: File) {
+class GitClient(workDirectory: File) {
 
-  val repository = Try(new RepositoryBuilder().findGitDir(cwd).readEnvironment().build()).toOption
+  val repository = Try(new RepositoryBuilder().findGitDir(workDirectory).readEnvironment().build()).toOption
 
   def latestCommitUuid(): Option[String] = {
     Try {

@@ -10,7 +10,8 @@ object Language extends Enumeration {
   JavaScript,
   PHP,
   Python,
-  Scala
+  Scala,
+  Ruby
   = Value
 
   implicit val languageFmt: Format[Language.Value] = EnumUtils.enumFormat(Language)

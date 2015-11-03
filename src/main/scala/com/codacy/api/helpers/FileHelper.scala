@@ -43,7 +43,7 @@ object FileHelper {
     Json.parse(lines).asOpt[A]
   }
 
-  def writeJsonToFile[A](file: File, value: A)(implicit fmt: Format[A]) = {
+  def writeJsonToFile[A](file: File, value: A)(implicit fmt: Format[A]): Boolean = {
     val reportJson = Json.toJson(value).toString()
     val printWriter = new PrintWriter(file)
     val result = util.Try(printWriter.write(reportJson)).isSuccess
