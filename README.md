@@ -10,6 +10,16 @@ Scala wrapper for the Codacy API.
 
 ### Usage
 
+If you use Maven you can declare the dependency:
+
+```
+<dependency>
+    <groupId>com.codacy</groupId>
+    <artifactId>codacy-api-java</artifactId>
+    <version>1.10</version>
+</dependency>
+```
+
 First, declare the dependency on SBT:
 
 ```
