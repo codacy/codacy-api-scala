@@ -1,6 +1,5 @@
 [![Circle CI](https://circleci.com/gh/codacy/codacy-api-scala/tree/master.svg?style=shield)](https://circleci.com/gh/codacy/codacy-api-scala/tree/master)
 [![Codacy Badge](https://www.codacy.com/project/badge/650fe924dba349458ee29d44f07dae6c)](https://www.codacy.com/app/Codacy/codacy-api-scala)
-[![Codacy Badge](https://api.codacy.com/project/badge/coverage/650fe924dba349458ee29d44f07dae6c)](https://www.codacy.com/app/Codacy/codacy-api-scala)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.codacy/codacy-api-scala_2.11/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.codacy/codacy-api-scala_2.11)
 
 
