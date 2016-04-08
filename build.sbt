@@ -18,8 +18,7 @@ libraryDependencies ++= Seq(
   jodaTime,
   playWS,
   jgit,
-  scalaTest,
-  "com.codacy" %% "coverage-parser" % "1.0.0"
+  scalaTest
 )
 
 organization := "com.codacy"
