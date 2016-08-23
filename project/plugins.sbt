@@ -2,7 +2,8 @@ import sbt._
 
 resolvers ++= Seq(
   "bintray repos" at "https://dl.bintray.com/sbt/sbt-plugin-releases",
-  "Sonatype snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
+  "Sonatype snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/",
+   Resolver.typesafeRepo("releases")
 )
 
 addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "0.5.0")
