@@ -12,7 +12,7 @@ crossScalaVersions := Seq("2.10.5", "2.11.7")
 
 scalacOptions := Seq("-deprecation", "-feature", "-unchecked", "-Ywarn-adapted-args", "-Xlint", "-Xfatal-warnings")
 
-resolvers ++= Seq("Typesafe maven repository" at "http://repo.typesafe.com/typesafe/maven-releases/", Resolver.typesafeRepo("releases"))
+resolvers += "Typesafe maven repository" at "http://repo.typesafe.com/typesafe/maven-releases/"
 
 libraryDependencies ++= Seq(
   jodaTime,
