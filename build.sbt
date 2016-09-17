@@ -4,7 +4,7 @@ import sbt._
 
 name := """codacy-api-scala"""
 
-version := "1.0.2"
+version := "1.0.3-SNAPSHOT"
 
 scalaVersion := "2.10.5"
 
@@ -16,8 +16,10 @@ resolvers += "Typesafe maven repository" at "http://repo.typesafe.com/typesafe/m
 
 libraryDependencies ++= Seq(
   jodaTime,
-  playWS,
   jgit,
+  `rapture-json`,
+  `rapture-json-play`,
+  `rapture-net`,
   scalaTest
 )
 

@@ -1,9 +1,8 @@
 package com.codacy.api
 
-import com.codacy.api.util.EnumUtils
-import play.api.libs.json.Format
+import com.codacy.api.util.JsonEnumeration
 
-object Language extends Enumeration {
+object Language extends JsonEnumeration {
   val
   CSS,
   Java,
@@ -13,7 +12,4 @@ object Language extends Enumeration {
   Scala,
   Ruby
   = Value
-
-  implicit val languageFmt: Format[Language.Value] = EnumUtils.enumFormat(Language)
-
 }

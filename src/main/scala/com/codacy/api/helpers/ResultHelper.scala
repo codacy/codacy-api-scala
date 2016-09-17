@@ -4,10 +4,12 @@ import java.io.File
 import java.util.UUID
 
 import com.codacy.api.ResultReport
-import com.codacy.api.client.CodacyClient
+import com.codacy.api.client.{CodacyClient, FailedResponse, SuccessfulResponse}
 import com.codacy.api.service.ResultServices
+import rapture.data.Parser
+import rapture.json.JsonAst
 
-object ResultHelper {
+class ResultHelper(implicit ast: JsonAst, astParser: Parser[String, JsonAst]) {
 
   private val currentPath = new File(System.getProperty("user.dir"))
   private val defaultOutputDirectory = new File(currentPath, "target/codacy-reports")
@@ -31,8 +33,8 @@ object ResultHelper {
         val requestResponses = readReports(commitUUID, outputDirectories).map { resultReport =>
           val response = resultServices.sendResults(commitUUID, resultReport)
           response match {
-            case requestResponse if requestResponse.hasError => Left(requestResponse.message)
-            case _ => Right(true)
+            case FailedResponse(message) => Left(message)
+            case _: SuccessfulResponse[_] => Right(true)
           }
         }
 

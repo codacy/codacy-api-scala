@@ -4,9 +4,9 @@ import com.codacy.api.helpers.ResultHelper
 import java.io.File
 import java.nio.file.Files
 import org.scalatest._
+import rapture.json.jsonBackends.play._
 
 class ResultHelperTest extends FlatSpec with Matchers {
-
 
   "ResultHelper" should "writeReportToFile" in {
 
@@ -24,7 +24,7 @@ class ResultHelperTest extends FlatSpec with Matchers {
     val report: ResultReport = ResultReport(algorithmUUID, commitUUID, results)
     val directory: Option[File] = Some(Files.createTempDirectory("tempDir").toFile)
 
-    val writeResult: Boolean = ResultHelper.writeReportToFile(report, directory)
+    val writeResult: Boolean = new ResultHelper().writeReportToFile(report, directory)
 
     writeResult should be (true)
   }

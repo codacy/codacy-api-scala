@@ -1,101 +1,84 @@
 package com.codacy.api.client
 
-import com.codacy.api.util.HTTPStatusCodes
-import com.ning.http.client.AsyncHttpClient
-import play.api.libs.json.{JsValue, Json, Reads}
-import play.api.libs.ws.ning.NingWSClient
-
-import scala.concurrent.Await
-import scala.concurrent.duration._
+import rapture.codec.encodings.`UTF-8`._
+import rapture.data.Parser
+import rapture.io._
+import rapture.json._
+import rapture.net._
 
 class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = None,
-                   projectToken: Option[String] = None) {
+                   projectToken: Option[String] = None)
+                  (implicit ast: JsonAst, astParser: Parser[String, JsonAst]) {
 
-  private val tokens = Seq.empty[(String, String)] ++
-    apiToken.map(t => ("api_token", t)) ++
-    projectToken.map(t => ("project_token", t))
+  private val tokens = Map.empty[String, String] ++
+    apiToken.map(t => "api_token" -> t) ++
+    projectToken.map(t => "project_token" -> t)
 
   private val remoteUrl = apiUrl.getOrElse("https://api.codacy.com") + "/2.0"
 
   /*
    * Does an API request and parses the json output into a class
    */
-  def execute[T](request: Request[T])(implicit reader: Reads[T]): RequestResponse[T] = {
+  def execute[T](request: Request[T])(implicit extractor: Extractor[T, Json]): RequestResponse[T] = {
     get(request.endpoint) match {
-      case Right(json) => RequestResponse(json.asOpt[T])
-      case Left(error) => RequestResponse(None, error.error, hasError = true)
+      case SuccessfulResponse(json) => SuccessfulResponse(json.as[T])
+      case f: FailedResponse => f
     }
   }
 
   /*
    * Does an paginated API request and parses the json output into a sequence of classes
    */
-  def executePaginated[T](request: Request[Seq[T]])(implicit reader: Reads[T]): RequestResponse[Seq[T]] = {
+  def executePaginated[T](request: Request[Seq[T]])(implicit extractor: Extractor[T, Json]): RequestResponse[Seq[T]] = {
     get(request.endpoint) match {
-      case Right(json) =>
-        val nextPage = (json \ "next").asOpt[String]
+      case SuccessfulResponse(json) =>
+        val nextPage = (json \ "next").as[Option[String]]
         val nextRepos = nextPage.map {
           nextUrl =>
-            executePaginated(Request(nextUrl, request.classType)).value.getOrElse(Seq())
-        }.getOrElse(Seq())
+            executePaginated(Request(nextUrl, request.classType))
+        }.getOrElse(SuccessfulResponse(Seq.empty))
 
-        RequestResponse(Some((json \ "values").as[Seq[T]] ++ nextRepos))
+        val values = (json \ "values").as[List[T]]
+          //.fold[RequestResponse[List[T]]](FailedResponse(s"Failed to parse json: $json"))(a => SuccessfulResponse(a))
+        RequestResponse.apply(SuccessfulResponse(values), nextRepos)
 
-      case Left(error) =>
-        RequestResponse[Seq[T]](None, error.error, hasError = true)
+      case f: FailedResponse => f
     }
   }
 
   /*
    * Does an API post
    */
-  def post[T](request: Request[T], value: String)(implicit reader: Reads[T]): RequestResponse[T] = {
-    withWSClient { client =>
-      val headers = tokens ++ Seq(("Content-Type", "application/json"))
+  def post[T](request: Request[T], value: String)(implicit extractor: Extractor[T, Json]): RequestResponse[T] = {
+    val headers = tokens ++ Map("Content-Type" -> "application/json")
 
-      val jpromise = client.url(s"$remoteUrl/${request.endpoint}")
-        .withHeaders(headers: _*)
-        .withFollowRedirects(follow = true)
-        .post(value)
-      val result = Await.result(jpromise, Duration(10, SECONDS))
+    val body = Http.parse(s"$remoteUrl/${request.endpoint}")
+      .httpPost(value, headers)
+      .slurp[Char]
 
-      if (Seq(HTTPStatusCodes.OK, HTTPStatusCodes.CREATED).contains(result.status)) {
-        val body = result.body
-
-        val jsValue = parseJson(body)
-        jsValue match {
-          case Right(responseObj) =>
-            RequestResponse(responseObj.asOpt[T])
-          case Left(message) =>
-            RequestResponse(None, message = message.error, hasError = true)
-        }
-      } else {
-        RequestResponse(None, result.statusText, hasError = true)
-      }
+    parseJson(body) match {
+      case Right(json) => SuccessfulResponse(json.as[T])
+      case Left(error) => error
     }
   }
 
-  private def get(endpoint: String): Either[ResponseError, JsValue] = {
-    withWSClient { client =>
-      val jpromise = client.url(s"$remoteUrl/$endpoint")
-        .withHeaders(tokens: _*)
-        .withFollowRedirects(follow = true).get()
-      val result = Await.result(jpromise, Duration(10, SECONDS))
+  private def get(endpoint: String): RequestResponse[Json] = {
+    val headers = tokens ++ Map("Content-Type" -> "application/json")
 
-      if (Seq(HTTPStatusCodes.OK, HTTPStatusCodes.CREATED).contains(result.status)) {
-        val body = result.body
+    val body = Http.parse(s"$remoteUrl/$endpoint")
+      .httpGet(headers)
+      .slurp[Char]
 
-        parseJson(body)
-      } else {
-        Left(ResponseError(result.statusText))
-      }
+    parseJson(body) match {
+      case Right(json) => SuccessfulResponse(json)
+      case Left(error) => error
     }
   }
 
-  private def parseJson(input: String): Either[ResponseError, JsValue] = {
+  private def parseJson(input: String): Either[FailedResponse, Json] = {
     val json = Json.parse(input)
 
-    val errorOpt = (json \ "error").asOpt[ResponseError]
+    val errorOpt = (json \ "error").as[Option[FailedResponse]]
 
     errorOpt.map {
       error =>
@@ -103,10 +86,4 @@ class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = Non
     }.getOrElse(Right(json))
   }
 
-  private def withWSClient[T](block: NingWSClient => T): T = {
-    val client = new NingWSClient(new AsyncHttpClient().getConfig)
-    val result = block(client)
-    client.close()
-    result
-  }
 }

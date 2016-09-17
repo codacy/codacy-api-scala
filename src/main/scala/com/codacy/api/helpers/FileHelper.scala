@@ -3,7 +3,9 @@ package com.codacy.api.helpers
 import java.io.{File, PrintWriter}
 
 import com.codacy.api.helpers.vcs.GitClient
-import play.api.libs.json.{Format, Json}
+import rapture.data.Parser
+import rapture.json.formatters.compact._
+import rapture.json.{Extractor, Json, JsonAst, Serializer}
 
 import scala.io.{Codec, Source}
 
@@ -35,19 +37,20 @@ object FileHelper {
     }
   }
 
-  def readJsonFromFile[A](file: File)(implicit fmt: Format[A]): Option[A] = {
+  def readJsonFromFile[A](file: File)(implicit ast: JsonAst, astParser: Parser[String, JsonAst], extractor: Extractor[A, Json]): Option[A] = {
     val source = Source.fromFile(file)(Codec.UTF8)
     val lines = try {
       source.mkString
     } finally source.close()
-    Json.parse(lines).asOpt[A]
+    Json.parse(lines).as[Option[A]]
   }
 
-  def writeJsonToFile[A](file: File, value: A)(implicit fmt: Format[A]): Boolean = {
-    val reportJson = Json.toJson(value).toString()
+  def writeJsonToFile[A](file: File, value: A)(implicit ast: JsonAst, serializer: Serializer[A, Json]): Boolean = {
+    val reportJson = Json.format(Json(value))
     val printWriter = new PrintWriter(file)
     val result = util.Try(printWriter.write(reportJson)).isSuccess
     printWriter.close()
     result
   }
+
 }
