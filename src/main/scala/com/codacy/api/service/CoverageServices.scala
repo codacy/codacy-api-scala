@@ -7,9 +7,9 @@ import rapture.json.formatters.compact._
 
 class CoverageServices(client: CodacyClient)(implicit ast: JsonAst) {
 
-  //rafael you are right, there is something wrong with the implicit resultion
-  //as a temporary workaround this helps the compiler
-  //i declared it private so we can remove it easily when rapture fixes the issue
+  // There is something wrong with the implicit resultion.
+  // As a temporary workaround this helps the compiler.
+  // I declared it private so we can remove it easily when rapture fixes the issue: https://github.com/propensive/rapture/issues/238
   private implicit lazy val ser = implicitly[Serializer[CoverageFileReport,Json]]
 
   def sendReport(commitUuid: String, language: Language.Value, coverageReport: CoverageReport): RequestResponse[RequestSuccess] = {
