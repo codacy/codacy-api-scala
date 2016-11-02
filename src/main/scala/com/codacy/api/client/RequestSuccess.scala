@@ -1,3 +1,3 @@
 package com.codacy.api.client
 
-case class RequestSuccess(message: String)
+case class RequestSuccess(success: String)
