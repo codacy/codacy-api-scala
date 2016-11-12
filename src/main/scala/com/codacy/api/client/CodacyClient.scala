@@ -78,11 +78,11 @@ class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = Non
   private def parseJson(input: String): Either[FailedResponse, Json] = {
     val json = Json.parse(input)
 
-    val errorOpt = (json \ "error").as[Option[FailedResponse]]
+    val errorOpt = (json \ "error").as[Option[String]]
 
     errorOpt.map {
       error =>
-        Left(error)
+        Left(FailedResponse(error))
     }.getOrElse(Right(json))
   }
 
