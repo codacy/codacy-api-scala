@@ -3,14 +3,14 @@ package com.codacy.api.helpers.vcs
 import java.io.File
 
 import org.eclipse.jgit.api.Git
-import org.eclipse.jgit.lib.RepositoryBuilder
+import org.eclipse.jgit.lib.{Repository, RepositoryBuilder}
 
 import scala.collection.JavaConversions._
 import scala.util.Try
 
 class GitClient(workDirectory: File) {
 
-  val repository = Try(new RepositoryBuilder().findGitDir(workDirectory).readEnvironment().build()).toOption
+  val repository: Option[Repository] = Try(new RepositoryBuilder().findGitDir(workDirectory).readEnvironment().build()).toOption
 
   def latestCommitUuid(): Option[String] = {
     Try {
@@ -19,7 +19,7 @@ class GitClient(workDirectory: File) {
         val headRev = git.log().setMaxCount(1).call().head
         headRev.getName
       }
-    }.toOption.flatten
+    }.toOption.flatten.filter(_.trim.nonEmpty)
   }
 
 }
