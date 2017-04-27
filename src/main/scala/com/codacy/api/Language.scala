@@ -10,6 +10,23 @@ object Language extends JsonEnumeration {
   PHP,
   Python,
   Scala,
-  Ruby
+  Ruby,
+  CoffeeScript,
+  Swift,
+  CPP,
+  C,
+  Shell,
+  TypeScript,
+  Dockerfile,
+  PLSQL,
+  JSON,
+  LESS,
+  SASS,
+  Go,
+  JSP,
+  Velocity,
+  XML,
+  Apex,
+  VisualForce
   = Value
 }
