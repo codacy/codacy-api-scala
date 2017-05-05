@@ -12,8 +12,8 @@ class CoverageServices(client: CodacyClient)(implicit ast: JsonAst) {
   // I declared it private so we can remove it easily when rapture fixes the issue: https://github.com/propensive/rapture/issues/238
   private implicit lazy val ser = implicitly[Serializer[CoverageFileReport,Json]]
 
-  def sendReport(commitUuid: String, language: Language.Value, coverageReport: CoverageReport): RequestResponse[RequestSuccess] = {
-    val endpoint = s"coverage/$commitUuid/${language.toString.toLowerCase}"
+  def sendReport(commitUuid: String, language: String, coverageReport: CoverageReport): RequestResponse[RequestSuccess] = {
+    val endpoint = s"coverage/$commitUuid/${language.toLowerCase}"
 
     val value = Json.format(Json(coverageReport))
 
