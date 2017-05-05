@@ -29,4 +29,6 @@ object Language extends JsonEnumeration {
   Apex,
   VisualForce
   = Value
+
+  val NotDefined = Value("UndefinedLanguage")
 }
