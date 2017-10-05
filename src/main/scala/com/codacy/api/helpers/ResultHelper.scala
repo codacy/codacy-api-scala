@@ -44,7 +44,7 @@ class ResultHelper(implicit ast: JsonAst, astParser: Parser[String, JsonAst]) {
     }
   }
 
-  private def readReports(commitUUID: String, outputDirectories: Option[Seq[File]] = None): Seq[ResultReport] = {
+  private def readReports(commitUUID: String, outputDirectories: Option[Seq[File]]): Seq[ResultReport] = {
     val directories = outputDirectories.getOrElse(Seq(defaultOutputDirectory))
 
     val allReports = directories.flatMap { directory =>

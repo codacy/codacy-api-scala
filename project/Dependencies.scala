@@ -2,7 +2,7 @@ import sbt._
 
 object Dependencies {
 
-  val raptureVersion = "2.0.0-M7"
+  val raptureVersion = "2.0.0-M8"
 
   // Generic
   val jodaTime = "joda-time" % "joda-time" % "2.7"
@@ -11,7 +11,7 @@ object Dependencies {
   val `rapture-net` = "com.propensive" %% "rapture-net" % raptureVersion withSources()
 
   // Test
-  val scalaTest = "org.scalatest" %% "scalatest" % "2.2.4" % "test"
+  val scalaTest = "org.scalatest" %% "scalatest" % "3.0.4" % "test"
   val `rapture-json-play` = "com.propensive" %% "rapture-json-play" % raptureVersion % "test"
 
 }

@@ -3,8 +3,6 @@ package com.codacy.api.util
 import rapture.data.{Extractor, Serializer}
 import rapture.json.Json
 
-import scala.language.implicitConversions
-
 trait JsonEnumeration extends Enumeration {
   self: Enumeration =>
 

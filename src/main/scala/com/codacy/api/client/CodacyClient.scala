@@ -8,7 +8,7 @@ import rapture.net._
 
 class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = None,
                    projectToken: Option[String] = None)
-                  (implicit ast: JsonAst, astParser: Parser[String, JsonAst]) {
+                  (implicit astParser: Parser[String, JsonAst]) {
 
   private val tokens = Map.empty[String, String] ++
     apiToken.map(t => "api_token" -> t) ++

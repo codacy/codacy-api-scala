@@ -5,7 +5,7 @@ import java.io.File
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.lib.{Repository, RepositoryBuilder}
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.util.Try
 
 class GitClient(workDirectory: File) {
@@ -16,7 +16,7 @@ class GitClient(workDirectory: File) {
     Try {
       repository.map { rep =>
         val git = new Git(rep)
-        val headRev = git.log().setMaxCount(1).call().head
+        val headRev = git.log().setMaxCount(1).call().asScala.head
         headRev.getName
       }
     }.toOption.flatten.filter(_.trim.nonEmpty)

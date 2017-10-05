@@ -37,7 +37,7 @@ object FileHelper {
     }
   }
 
-  def readJsonFromFile[A](file: File)(implicit ast: JsonAst, astParser: Parser[String, JsonAst], extractor: Extractor[A, Json]): Option[A] = {
+  def readJsonFromFile[A](file: File)(implicit astParser: Parser[String, JsonAst], extractor: Extractor[A, Json]): Option[A] = {
     val source = Source.fromFile(file)(Codec.UTF8)
     val lines = try {
       source.mkString
