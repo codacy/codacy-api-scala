@@ -1,7 +1,7 @@
 package com.codacy.api.service
 
 import com.codacy.api.client.{CodacyClient, Request, RequestResponse, RequestSuccess}
-import com.codacy.api.{CoverageFileReport, CoverageReport, Language}
+import com.codacy.api.{CoverageFileReport, CoverageReport}
 import rapture.json._
 import rapture.json.formatters.compact._
 
