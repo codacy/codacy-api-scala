@@ -13,10 +13,12 @@ case class CommitInfo(uuid: String, authorName: String, authorEmail: String, dat
 
 class GitClient(workDirectory: File) {
 
-  val repository: Try[Repository] = Try(new RepositoryBuilder().findGitDir(workDirectory).readEnvironment().build())
+  val repositoryTry: Try[Repository] = Try(new RepositoryBuilder().findGitDir(workDirectory).readEnvironment().build())
+
+  val repository: Option[Repository] = repositoryTry.toOption
 
   def latestCommitUuid(): Option[String] = {
-    repository.map { rep =>
+    repositoryTry.map { rep =>
       val git = new Git(rep)
       val headRev = git.log().setMaxCount(1).call().asScala.head
       headRev.getName
@@ -24,7 +26,7 @@ class GitClient(workDirectory: File) {
   }
 
   def latestCommitInfo: Try[CommitInfo] = {
-    repository.map { rep =>
+    repositoryTry.map { rep =>
       val git = new Git(rep)
       val headRev = git.log().setMaxCount(1).call().asScala.head
       val authorIdent = headRev.getAuthorIdent
