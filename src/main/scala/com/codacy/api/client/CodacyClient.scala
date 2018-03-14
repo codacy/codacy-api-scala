@@ -6,6 +6,8 @@ import rapture.io._
 import rapture.json._
 import rapture.net._
 
+import scala.reflect.ClassTag
+
 class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = None,
                    projectToken: Option[String] = None)
                   (implicit astParser: Parser[String, JsonAst]) {
@@ -39,7 +41,7 @@ class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = Non
         }.getOrElse(SuccessfulResponse(Seq.empty))
 
         val values = (json \ "values").as[List[T]]
-          //.fold[RequestResponse[List[T]]](FailedResponse(s"Failed to parse json: $json"))(a => SuccessfulResponse(a))
+        //.fold[RequestResponse[List[T]]](FailedResponse(s"Failed to parse json: $json"))(a => SuccessfulResponse(a))
         RequestResponse.apply(SuccessfulResponse(values), nextRepos)
 
       case f: FailedResponse => f
@@ -57,10 +59,7 @@ class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = Non
       .httpPost(value, headers)
       .slurp[Char]
 
-    parseJson(body) match {
-      case Right(json) => SuccessfulResponse(json.as[T])
-      case Left(error) => error
-    }
+    parseJsonAs[T](body)
   }
 
   private def get(endpoint: String): RequestResponse[Json] = {
@@ -70,21 +69,48 @@ class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = Non
       .httpGet(headers)
       .slurp[Char]
 
-    parseJson(body) match {
-      case Right(json) => SuccessfulResponse(json)
-      case Left(error) => error
+    parseJson(body)
+  }
+
+  private def parseJsonAs[T](input: String)(implicit extractor: Extractor[T, Json]): RequestResponse[T] = {
+    import rapture.core.modes.returnResult._
+
+    parseJson(input) match {
+      case failure: FailedResponse => failure
+
+      case SuccessfulResponse(json) =>
+        json.as[T].fold(SuccessfulResponse.apply, convertRequestRaptureErrors(input)(_))
     }
   }
 
-  private def parseJson(input: String): Either[FailedResponse, Json] = {
-    val json = Json.parse(input)
+  private def parseJson(input: String): RequestResponse[Json] = {
+    import rapture.core.modes.returnResult._
 
-    val errorOpt = (json \ "error").as[Option[String]]
+    val raptureResult = for {
+      json <- Json.parse(input)
+    } yield {
+      (json \ "error").as[Option[String]]
+        .getOrElse(None)
+        .fold[RequestResponse[Json]](
+        SuccessfulResponse(json))(
+        error => FailedResponse(error)
+      )
+    }
 
-    errorOpt.map {
-      error =>
-        Left(FailedResponse(error))
-    }.getOrElse(Right(json))
+    raptureResult
+      .fold(identity, convertRequestRaptureErrors(input)(_))
   }
 
+  private def convertRequestRaptureErrors(body: String)(errors: Seq[(ClassTag[_], (String, Exception))]) = {
+    val msgs = errors.map { case (_, (_, error)) => error.getMessage }.mkString("\n")
+    FailedResponse(apiResponseParseError(msgs, body))
+  }
+
+  private def apiResponseParseError(errorMsg: String, responseBody: String) = {
+    s"""Failed to parse API response:
+       | $responseBody
+       | With the following errors:
+       | $errorMsg
+        """.stripMargin
+  }
 }
