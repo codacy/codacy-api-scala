@@ -39,7 +39,7 @@ class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = Non
         }.getOrElse(SuccessfulResponse(Seq.empty))
 
         val values = (json \ "values").as[List[T]]
-          //.fold[RequestResponse[List[T]]](FailedResponse(s"Failed to parse json: $json"))(a => SuccessfulResponse(a))
+        //.fold[RequestResponse[List[T]]](FailedResponse(s"Failed to parse json: $json"))(a => SuccessfulResponse(a))
         RequestResponse.apply(SuccessfulResponse(values), nextRepos)
 
       case f: FailedResponse => f
@@ -57,8 +57,8 @@ class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = Non
       .slurp[Char]
 
     parseJson(body) match {
-      case Right(json) => SuccessfulResponse(json.as[T])
-      case Left(error) => error
+      case SuccessfulResponse(json) => SuccessfulResponse(json.as[T])
+      case failure: FailedResponse => failure
     }
   }
 
@@ -69,21 +69,35 @@ class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = Non
       .httpGet(headers)
       .slurp[Char]
 
-    parseJson(body) match {
-      case Right(json) => SuccessfulResponse(json)
-      case Left(error) => error
+    parseJson(body)
+  }
+
+  private def parseJson(input: String): RequestResponse[Json] = {
+    import rapture.core.modes.returnResult._
+
+    val raptureResult = for {
+      json <- Json.parse(input)
+    } yield {
+      (json \ "error").as[Option[String]]
+        .getOrElse(None)
+        .fold[RequestResponse[Json]](
+        SuccessfulResponse(json))(
+        error => FailedResponse(error)
+      )
     }
+
+    raptureResult
+      .fold(identity, { errors =>
+        val msgs = errors.map { case (_, (_, error)) => error.getMessage }.mkString("\n")
+        FailedResponse(apiResponseParseError(msgs, input))
+      })
   }
 
-  private def parseJson(input: String): Either[FailedResponse, Json] = {
-    val json = Json.parse(input)
-
-    val errorOpt = (json \ "error").as[Option[String]]
-
-    errorOpt.map {
-      error =>
-        Left(FailedResponse(error))
-    }.getOrElse(Right(json))
+  private def apiResponseParseError(errorMsg: String, responseBody: String) = {
+    s"""Failed to parse API response:
+       | $responseBody
+       | With the following errors:
+       | $errorMsg
+        """.stripMargin
   }
-
 }
