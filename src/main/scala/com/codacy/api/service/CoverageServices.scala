@@ -22,9 +22,9 @@ class CoverageServices(client: CodacyClient)(implicit ast: JsonAst) {
   }
 
   def sendFinalNotification(commitUuid: String): RequestResponse[RequestSuccess] = {
-    val endpoint = s"coverage/$commitUuid/coverageFinal"
+    val endpoint = s"commit/$commitUuid/coverageFinal"
 
-    client.post(Request(endpoint, classOf[RequestSuccess]), "")(implicitly)
+    client.post(Request(endpoint, classOf[RequestSuccess]), "{}")(implicitly)
   }
 
 }
