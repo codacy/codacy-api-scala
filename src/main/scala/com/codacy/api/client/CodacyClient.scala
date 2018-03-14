@@ -53,6 +53,7 @@ class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = Non
     val headers = tokens ++ Map("Content-Type" -> "application/json")
 
     val body = Http.parse(s"$remoteUrl/${request.endpoint}")
+      .query(request.queryParameters)
       .httpPost(value, headers)
       .slurp[Char]
 
