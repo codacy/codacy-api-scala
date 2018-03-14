@@ -13,11 +13,12 @@ class CoverageServices(client: CodacyClient)(implicit ast: JsonAst) {
   private implicit lazy val ser = implicitly[Serializer[CoverageFileReport, Json]]
 
   def sendReport(commitUuid: String, language: String, coverageReport: CoverageReport, partial: Boolean = false): RequestResponse[RequestSuccess] = {
-    val endpoint = s"coverage/$commitUuid/${language.toLowerCase}?partial=$partial"
+    val endpoint = s"coverage/$commitUuid/${language.toLowerCase}"
+    val queryParams = Map("partial" -> partial.toString)
 
     val value = Json.format(Json(coverageReport))
 
-    client.post(Request(endpoint, classOf[RequestSuccess]), value)(implicitly)
+    client.post(Request(endpoint, classOf[RequestSuccess], queryParams), value)(implicitly)
   }
 
   def sendFinalNotification(commitUuid: String): RequestResponse[RequestSuccess] = {
