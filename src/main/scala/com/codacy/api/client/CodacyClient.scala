@@ -6,6 +6,8 @@ import rapture.io._
 import rapture.json._
 import rapture.net._
 
+import scala.reflect.ClassTag
+
 class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = None,
                    projectToken: Option[String] = None)
                   (implicit astParser: Parser[String, JsonAst]) {
@@ -56,10 +58,7 @@ class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = Non
       .httpPost(value, headers)
       .slurp[Char]
 
-    parseJson(body) match {
-      case SuccessfulResponse(json) => SuccessfulResponse(json.as[T])
-      case failure: FailedResponse => failure
-    }
+    parseJsonAs[T](body)
   }
 
   private def get(endpoint: String): RequestResponse[Json] = {
@@ -70,6 +69,17 @@ class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = Non
       .slurp[Char]
 
     parseJson(body)
+  }
+
+  private def parseJsonAs[T](input: String)(implicit extractor: Extractor[T, Json]): RequestResponse[T] = {
+    import rapture.core.modes.returnResult._
+
+    parseJson(input) match {
+      case failure: FailedResponse => failure
+
+      case SuccessfulResponse(json) =>
+        json.as[T].fold(SuccessfulResponse.apply, convertRequestRaptureErrors(input)(_))
+    }
   }
 
   private def parseJson(input: String): RequestResponse[Json] = {
@@ -87,10 +97,12 @@ class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = Non
     }
 
     raptureResult
-      .fold(identity, { errors =>
-        val msgs = errors.map { case (_, (_, error)) => error.getMessage }.mkString("\n")
-        FailedResponse(apiResponseParseError(msgs, input))
-      })
+      .fold(identity, convertRequestRaptureErrors(input)(_))
+  }
+
+  private def convertRequestRaptureErrors(body: String)(errors: Seq[(ClassTag[_], (String, Exception))]) = {
+    val msgs = errors.map { case (_, (_, error)) => error.getMessage }.mkString("\n")
+    FailedResponse(apiResponseParseError(msgs, body))
   }
 
   private def apiResponseParseError(errorMsg: String, responseBody: String) = {
