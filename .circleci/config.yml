@@ -71,8 +71,6 @@ jobs:
         root: ~/workdir
         paths:
         - target
-        - cli/target
-        - core/target
         - project/target
         - project/project/target
 
