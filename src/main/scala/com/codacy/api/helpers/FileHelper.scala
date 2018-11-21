@@ -3,11 +3,10 @@ package com.codacy.api.helpers
 import java.io.{File, PrintWriter}
 
 import com.codacy.api.helpers.vcs.GitClient
-import rapture.data.Parser
-import rapture.json.formatters.compact._
-import rapture.json.{Extractor, Json, JsonAst, Serializer}
+import play.api.libs.json._
 
 import scala.io.{Codec, Source}
+import scala.util.Try
 
 object FileHelper {
 
@@ -27,7 +26,7 @@ object FileHelper {
   }
 
   def withCommit[T](commitUUID: Option[String] = None)
-                   (block: (String) => Either[String, T]): Either[String, T] = {
+                   (block: String => Either[String, T]): Either[String, T] = {
     val gitClient = new GitClient(currentPath)
 
     commitUUID.orElse(gitClient.latestCommitUuid()).map { currentCommitUUID =>
@@ -37,18 +36,21 @@ object FileHelper {
     }
   }
 
-  def readJsonFromFile[A](file: File)(implicit astParser: Parser[String, JsonAst], extractor: Extractor[A, Json]): Option[A] = {
+  def readJsonFromFile[A](file: File)(implicit reads: Reads[A]): Option[A] = {
     val source = Source.fromFile(file)(Codec.UTF8)
     val lines = try {
       source.mkString
     } finally source.close()
-    Json.parse(lines).as[Option[A]]
+    Json.parse(lines).validate[A].fold(
+      _ => Option.empty[A],
+      derived => Option(derived)
+    )
   }
 
-  def writeJsonToFile[A](file: File, value: A)(implicit ast: JsonAst, serializer: Serializer[A, Json]): Boolean = {
-    val reportJson = Json.format(Json(value))
+  def writeJsonToFile[A](file: File, value: A)(implicit writes: Writes[A]): Boolean = {
+    val reportJson = Json.stringify(Json.toJson(value))
     val printWriter = new PrintWriter(file)
-    val result = util.Try(printWriter.write(reportJson)).isSuccess
+    val result = Try(printWriter.write(reportJson)).isSuccess
     printWriter.close()
     result
   }

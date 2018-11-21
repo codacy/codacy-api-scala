@@ -6,10 +6,8 @@ import java.util.UUID
 import com.codacy.api.ResultReport
 import com.codacy.api.client.{CodacyClient, FailedResponse, SuccessfulResponse}
 import com.codacy.api.service.ResultServices
-import rapture.data.Parser
-import rapture.json.JsonAst
 
-class ResultHelper(implicit ast: JsonAst, astParser: Parser[String, JsonAst]) {
+class ResultHelper {
 
   private val currentPath = new File(System.getProperty("user.dir"))
   private val defaultOutputDirectory = new File(currentPath, "target/codacy-reports")
@@ -25,6 +23,7 @@ class ResultHelper(implicit ast: JsonAst, astParser: Parser[String, JsonAst]) {
   def sendReport(outputDirectories: Option[Seq[File]] = None, apiUrl: Option[String] = None,
                  projectTokenOpt: Option[String] = None,
                  commitUUIDOpt: Option[String] = None): Either[String, Boolean] = {
+
     FileHelper.withTokenAndCommit(projectTokenOpt, commitUUIDOpt) {
       case (projectToken, commitUUID) =>
         val codacyClient = new CodacyClient(apiUrl = apiUrl, projectToken = Some(projectToken))

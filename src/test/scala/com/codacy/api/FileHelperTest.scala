@@ -19,7 +19,7 @@ class FileHelperTest extends FlatSpec with Matchers {
     result should be('right)
 
     result match {
-      case Right(r) => r shouldBe (true)
+      case Right(r) => r shouldBe true
 
       case Left(s) => fail(s"Should not produce a Left. Left value: $s")
     }

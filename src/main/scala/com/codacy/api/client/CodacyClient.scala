@@ -1,16 +1,21 @@
 package com.codacy.api.client
 
-import rapture.codec.encodings.`UTF-8`._
-import rapture.data.Parser
-import rapture.io._
-import rapture.json._
 import rapture.net._
+import rapture.io._
+import rapture.codec.encodings.`UTF-8`._
+import play.api.libs.json._
+import play.api.libs.json.Reads._
+import com.codacy.api.util.JsonOps
 
-import scala.reflect.ClassTag
+
 
 class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = None,
-                   projectToken: Option[String] = None)
-                  (implicit astParser: Parser[String, JsonAst]) {
+                   projectToken: Option[String] = None) {
+
+  case class ErrorJson(error: String)
+  implicit val errorJsonFormat: Reads[ErrorJson] = Json.reads[ErrorJson]
+
+  case class PaginatedResult[T](next: Option[String], values: Seq[T])
 
   private val tokens = Map.empty[String, String] ++
     apiToken.map(t => "api_token" -> t) ++
@@ -21,9 +26,12 @@ class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = Non
   /*
    * Does an API request and parses the json output into a class
    */
-  def execute[T](request: Request[T])(implicit extractor: Extractor[T, Json]): RequestResponse[T] = {
+  def execute[T](request: Request[T])(implicit reads: Reads[T]): RequestResponse[T] = {
     get(request.endpoint) match {
-      case SuccessfulResponse(json) => SuccessfulResponse(json.as[T])
+      case SuccessfulResponse(json) => json.validate[T].fold(
+        errors => FailedResponse(JsonOps.handleDerivationFailure(errors)),
+        derived => SuccessfulResponse(derived)
+      )
       case f: FailedResponse => f
     }
   }
@@ -31,19 +39,20 @@ class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = Non
   /*
    * Does an paginated API request and parses the json output into a sequence of classes
    */
-  def executePaginated[T](request: Request[Seq[T]])(implicit extractor: Extractor[T, Json]): RequestResponse[Seq[T]] = {
+  def executePaginated[T](request: Request[Seq[T]])(implicit reads: Reads[T]): RequestResponse[Seq[T]] = {
+    implicit val paginatedResultReads: Reads[PaginatedResult[T]] = Json.reads[PaginatedResult[T]]
     get(request.endpoint) match {
       case SuccessfulResponse(json) =>
-        val nextPage = (json \ "next").as[Option[String]]
-        val nextRepos = nextPage.map {
-          nextUrl =>
-            executePaginated(Request(nextUrl, request.classType))
-        }.getOrElse(SuccessfulResponse(Seq.empty))
-
-        val values = (json \ "values").as[List[T]]
-        //.fold[RequestResponse[List[T]]](FailedResponse(s"Failed to parse json: $json"))(a => SuccessfulResponse(a))
-        RequestResponse.apply(SuccessfulResponse(values), nextRepos)
-
+        json.validate[PaginatedResult[T]].fold(
+          errors => FailedResponse(JsonOps.handleDerivationFailure(errors)),
+          {
+            case PaginatedResult(Some(nextUrl), values) =>
+              val nextRepos = executePaginated(Request(nextUrl, request.classType))
+              RequestResponse(SuccessfulResponse(values), nextRepos)
+            case PaginatedResult(None, values) =>
+              RequestResponse(SuccessfulResponse(values), SuccessfulResponse(Seq.empty))
+          }
+        )
       case f: FailedResponse => f
     }
   }
@@ -51,7 +60,7 @@ class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = Non
   /*
    * Does an API post
    */
-  def post[T](request: Request[T], value: String)(implicit extractor: Extractor[T, Json]): RequestResponse[T] = {
+  def post[T](request: Request[T], value: String)(implicit reads: Reads[T]): RequestResponse[T] = {
     val headers = tokens ++ Map("Content-Type" -> "application/json")
 
     val body = Http.parse(s"$remoteUrl/${request.endpoint}")
@@ -62,7 +71,7 @@ class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = Non
     parseJsonAs[T](body)
   }
 
-  private def get(endpoint: String): RequestResponse[Json] = {
+  private def get(endpoint: String): RequestResponse[JsValue] = {
     val headers = tokens ++ Map("Content-Type" -> "application/json")
 
     val body = Http.parse(s"$remoteUrl/$endpoint")
@@ -72,45 +81,22 @@ class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = Non
     parseJson(body)
   }
 
-  private def parseJsonAs[T](input: String)(implicit extractor: Extractor[T, Json]): RequestResponse[T] = {
-    import rapture.core.modes.returnResult._
-
+  private def parseJsonAs[T](input: String)(implicit reads: Reads[T]): RequestResponse[T] = {
     parseJson(input) match {
       case failure: FailedResponse => failure
-
       case SuccessfulResponse(json) =>
-        json.as[T].fold(SuccessfulResponse.apply, convertRequestRaptureErrors(input)(_))
+        json.validate[T].fold(
+          errors => FailedResponse(JsonOps.handleDerivationFailure(errors)),
+          derived => SuccessfulResponse(derived)
+        )
     }
   }
 
-  private def parseJson(input: String): RequestResponse[Json] = {
-    import rapture.core.modes.returnResult._
-
-    val raptureResult = for {
-      json <- Json.parse(input)
-    } yield {
-      (json \ "error").as[Option[String]]
-        .getOrElse(None)
-        .fold[RequestResponse[Json]](
-        SuccessfulResponse(json))(
-        error => FailedResponse(error)
-      )
-    }
-
-    raptureResult
-      .fold(identity, convertRequestRaptureErrors(input)(_))
-  }
-
-  private def convertRequestRaptureErrors(body: String)(errors: Seq[(ClassTag[_], (String, Exception))]) = {
-    val msgs = errors.map { case (_, (_, error)) => error.getMessage }.mkString("\n")
-    FailedResponse(apiResponseParseError(msgs, body))
-  }
-
-  private def apiResponseParseError(errorMsg: String, responseBody: String) = {
-    s"""Failed to parse API response:
-       | $responseBody
-       | With the following errors:
-       | $errorMsg
-        """.stripMargin
+  private def parseJson(input: String): RequestResponse[JsValue] = {
+    val json = Json.parse(input)
+    json.validate[ErrorJson].fold(
+      _ => SuccessfulResponse(json),
+      apiError => FailedResponse(apiError.error)
+    )
   }
 }

@@ -6,7 +6,7 @@ name := """codacy-api-scala"""
 
 version := "1.0.3-SNAPSHOT"
 
-scalaVersion := "2.10.6"
+scalaVersion := "2.11.11"
 
 crossScalaVersions := Seq("2.10.6", "2.11.11", "2.12.3")
 
@@ -16,10 +16,10 @@ resolvers += "Typesafe maven repository" at "http://repo.typesafe.com/typesafe/m
 
 libraryDependencies ++= Seq(
   jodaTime,
+  jodaConvert,
   jgit,
-  `rapture-json`,
-  `rapture-json-play`,
   `rapture-net`,
+  playJson,
   scalaTest
 )
 
