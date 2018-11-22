@@ -18,7 +18,7 @@ libraryDependencies ++= Seq(
   jodaTime,
   jodaConvert,
   jgit,
-  `rapture-net`,
+  scalajHttp,
   playJson,
   scalaTest
 )
