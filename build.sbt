@@ -6,16 +6,15 @@ name := """codacy-api-scala"""
 
 version := "1.0.3-SNAPSHOT"
 
-scalaVersion := "2.11.11"
+scalaVersion := "2.10.7"
 
-crossScalaVersions := Seq("2.10.6", "2.11.11", "2.12.3")
+crossScalaVersions := Seq("2.10.7", "2.11.12", "2.12.7")
 
 scalacOptions := Seq("-deprecation", "-feature", "-unchecked", "-Ywarn-adapted-args", "-Xlint", "-Xfatal-warnings")
 
 resolvers += "Typesafe maven repository" at "http://repo.typesafe.com/typesafe/maven-releases/"
 
 libraryDependencies ++= Seq(
-  jodaTime,
   jodaConvert,
   jgit,
   scalajHttp,
