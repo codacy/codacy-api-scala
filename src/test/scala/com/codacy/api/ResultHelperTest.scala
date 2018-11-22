@@ -4,7 +4,6 @@ import com.codacy.api.helpers.ResultHelper
 import java.io.File
 import java.nio.file.Files
 import org.scalatest._
-import rapture.json.jsonBackends.play._
 
 class ResultHelperTest extends FlatSpec with Matchers {
 
