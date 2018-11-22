@@ -7,10 +7,10 @@ import scalaj.http.Http
 class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = None,
                    projectToken: Option[String] = None) {
 
-  case class ErrorJson(error: String)
-  implicit val errorJsonFormat: Reads[ErrorJson] = Json.reads[ErrorJson]
+  private case class ErrorJson(error: String)
+  private case class PaginatedResult[T](next: Option[String], values: Seq[T])
 
-  case class PaginatedResult[T](next: Option[String], values: Seq[T])
+  private implicit val errorJsonFormat: Reads[ErrorJson] = Json.reads[ErrorJson]
 
   private val tokens = Map.empty[String, String] ++
     apiToken.map(t => "api_token" -> t) ++
@@ -24,8 +24,8 @@ class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = Non
   def execute[T](request: Request[T])(implicit reads: Reads[T]): RequestResponse[T] = {
     get(request.endpoint) match {
       case SuccessfulResponse(json) => json.validate[T].fold(
-        errors => FailedResponse(JsonOps.handleDerivationFailure(errors)),
-        derived => SuccessfulResponse(derived)
+        errors => FailedResponse(JsonOps.handleConversionFailure(errors)),
+        converted => SuccessfulResponse(converted)
       )
       case f: FailedResponse => f
     }
@@ -39,7 +39,7 @@ class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = Non
     get(request.endpoint) match {
       case SuccessfulResponse(json) =>
         json.validate[PaginatedResult[T]].fold(
-          errors => FailedResponse(JsonOps.handleDerivationFailure(errors)),
+          errors => FailedResponse(JsonOps.handleConversionFailure(errors)),
           {
             case PaginatedResult(Some(nextUrl), values) =>
               val nextRepos = executePaginated(Request(nextUrl, request.classType))
@@ -82,8 +82,8 @@ class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = Non
       case failure: FailedResponse => failure
       case SuccessfulResponse(json) =>
         json.validate[T].fold(
-          errors => FailedResponse(JsonOps.handleDerivationFailure(errors)),
-          derived => SuccessfulResponse(derived)
+          errors => FailedResponse(JsonOps.handleConversionFailure(errors)),
+          converted => SuccessfulResponse(converted)
         )
     }
   }

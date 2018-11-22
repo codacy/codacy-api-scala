@@ -41,10 +41,7 @@ object FileHelper {
     val lines = try {
       source.mkString
     } finally source.close()
-    Json.parse(lines).validate[A].fold(
-      _ => Option.empty[A],
-      derived => Option(derived)
-    )
+    Json.parse(lines).validate[A].asOpt
   }
 
   def writeJsonToFile[A](file: File, value: A)(implicit writes: Writes[A]): Boolean = {

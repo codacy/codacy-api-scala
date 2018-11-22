@@ -10,9 +10,9 @@ class CoverageServices(client: CodacyClient) {
     val endpoint = s"coverage/$commitUuid/${language.toLowerCase}"
     val queryParams = Map("partial" -> partial.toString)
 
-    val value = Json.stringify(Json.toJson(coverageReport))
+    val jsonString = Json.stringify(Json.toJson(coverageReport))
 
-    client.post(Request(endpoint, classOf[RequestSuccess], queryParams), value)
+    client.post(Request(endpoint, classOf[RequestSuccess], queryParams), jsonString)
   }
 
   def sendFinalNotification(commitUuid: String):
