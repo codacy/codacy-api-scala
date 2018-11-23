@@ -16,7 +16,7 @@ fi
 
 echo "Publishing version ${VERSION}"
 if [[ -n "$CI" ]] && [[ "$CURRENT_BRANCH" == "$PUBLISH_BRANCH" || "$CIRCLE_BRANCH" == "$PUBLISH_BRANCH" ]]; then
-  sbt 'set version := "'"${VERSION}"'"' 'set pgpPassphrase := Some("'"$SONATYPE_GPG_PASSPHRASE"'".toCharArray)' publishSigned sonatypeRelease
+  sbt 'set version := "'"${VERSION}"'"' 'set pgpPassphrase := Some("'"$SONATYPE_GPG_PASSPHRASE"'".toCharArray)' +publishSigned sonatypeReleaseAll
 else
-  sbt 'set version := "'"${VERSION}"'"' publishLocal
+  sbt 'set version := "'"${VERSION}"'"' +publishLocal
 fi
