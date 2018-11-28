@@ -92,7 +92,7 @@ class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = Non
     val json = Json.parse(input)
     json.validate[ErrorJson].fold(
       _ => SuccessfulResponse(json),
-      apiError => FailedResponse(apiError.error)
+      apiError => FailedResponse(s"API Error: ${apiError.error}")
     )
   }
 }

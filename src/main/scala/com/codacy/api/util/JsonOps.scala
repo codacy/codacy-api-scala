@@ -4,6 +4,7 @@ import play.api.libs.json.{JsError, JsPath, Json, JsonValidationError}
 
 object JsonOps {
   def handleConversionFailure(error: Seq[(JsPath, Seq[JsonValidationError])]): String = {
-    Json.stringify(JsError.toJson(error.toList))
+    val jsonError = Json.stringify(JsError.toJson(error.toList))
+    s"Json conversion error: $jsonError"
   }
 }
