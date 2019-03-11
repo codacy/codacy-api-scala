@@ -44,6 +44,16 @@ references:
           project/Dependencies.scala > /tmp/dependencies.cache.tmp
 
 jobs:
+
+  trigger_test:
+    <<: *default_java_job
+    steps:
+      - checkout
+      - *restore_dependencies
+      - run:
+          name: Test
+          command: ./scripts/test.sh
+
   checkout_compile:
     <<: *default_java_job
     steps:
