@@ -5,8 +5,7 @@ import java.nio.file.Paths
 import org.scalatest.{FlatSpec, Matchers}
 import org.scalatest.OptionValues._
 
-class GitClientTest  extends FlatSpec with Matchers {
-
+class GitClientTest extends FlatSpec with Matchers {
 
   "GitClient" should "latestCommitUuid" in {
 
@@ -14,9 +13,9 @@ class GitClientTest  extends FlatSpec with Matchers {
 
     val latest: Option[String] = new GitClient(file).latestCommitUuid()
 
-    latest shouldNot be (None)
+    latest shouldNot be(None)
 
-    latest.value shouldNot be ('empty)
+    latest.value shouldNot be('empty)
   }
 
 }

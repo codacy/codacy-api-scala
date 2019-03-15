@@ -4,8 +4,11 @@ import play.api.libs.json._
 import com.codacy.api.util.JsonOps
 import scalaj.http.Http
 
-class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = None,
-                   projectToken: Option[String] = None) {
+class CodacyClient(
+    apiUrl: Option[String] = None,
+    apiToken: Option[String] = None,
+    projectToken: Option[String] = None
+) {
 
   private case class ErrorJson(error: String)
   private case class PaginatedResult[T](next: Option[String], values: Seq[T])
@@ -23,10 +26,13 @@ class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = Non
    */
   def execute[T](request: Request[T])(implicit reads: Reads[T]): RequestResponse[T] = {
     get(request.endpoint) match {
-      case SuccessfulResponse(json) => json.validate[T].fold(
-        errors => FailedResponse(JsonOps.handleConversionFailure(errors)),
-        converted => SuccessfulResponse(converted)
-      )
+      case SuccessfulResponse(json) =>
+        json
+          .validate[T]
+          .fold(
+            errors => FailedResponse(JsonOps.handleConversionFailure(errors)),
+            converted => SuccessfulResponse(converted)
+          )
       case f: FailedResponse => f
     }
   }
@@ -38,16 +44,17 @@ class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = Non
     implicit val paginatedResultReads: Reads[PaginatedResult[T]] = Json.reads[PaginatedResult[T]]
     get(request.endpoint) match {
       case SuccessfulResponse(json) =>
-        json.validate[PaginatedResult[T]].fold(
-          errors => FailedResponse(JsonOps.handleConversionFailure(errors)),
-          {
-            case PaginatedResult(Some(nextUrl), values) =>
-              val nextRepos = executePaginated(Request(nextUrl, request.classType))
-              RequestResponse(SuccessfulResponse(values), nextRepos)
-            case PaginatedResult(None, values) =>
-              RequestResponse(SuccessfulResponse(values), SuccessfulResponse(Seq.empty))
-          }
-        )
+        json
+          .validate[PaginatedResult[T]]
+          .fold(
+            errors => FailedResponse(JsonOps.handleConversionFailure(errors)), {
+              case PaginatedResult(Some(nextUrl), values) =>
+                val nextRepos = executePaginated(Request(nextUrl, request.classType))
+                RequestResponse(SuccessfulResponse(values), nextRepos)
+              case PaginatedResult(None, values) =>
+                RequestResponse(SuccessfulResponse(values), SuccessfulResponse(Seq.empty))
+            }
+          )
       case f: FailedResponse => f
     }
   }
@@ -62,7 +69,8 @@ class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = Non
       .params(request.queryParameters)
       .headers(headers)
       .postData(value)
-      .asString.body
+      .asString
+      .body
 
     parseJsonAs[T](body)
   }
@@ -72,7 +80,8 @@ class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = Non
 
     val body = Http(s"$remoteUrl/$endpoint")
       .headers(headers)
-      .asString.body
+      .asString
+      .body
 
     parseJson(body)
   }
@@ -81,18 +90,19 @@ class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = Non
     parseJson(input) match {
       case failure: FailedResponse => failure
       case SuccessfulResponse(json) =>
-        json.validate[T].fold(
-          errors => FailedResponse(JsonOps.handleConversionFailure(errors)),
-          converted => SuccessfulResponse(converted)
-        )
+        json
+          .validate[T]
+          .fold(
+            errors => FailedResponse(JsonOps.handleConversionFailure(errors)),
+            converted => SuccessfulResponse(converted)
+          )
     }
   }
 
   private def parseJson(input: String): RequestResponse[JsValue] = {
     val json = Json.parse(input)
-    json.validate[ErrorJson].fold(
-      _ => SuccessfulResponse(json),
-      apiError => FailedResponse(s"API Error: ${apiError.error}")
-    )
+    json
+      .validate[ErrorJson]
+      .fold(_ => SuccessfulResponse(json), apiError => FailedResponse(s"API Error: ${apiError.error}"))
   }
 }

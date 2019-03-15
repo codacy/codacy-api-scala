@@ -20,9 +20,12 @@ class ResultHelper {
     FileHelper.writeJsonToFile(outputFile, report)
   }
 
-  def sendReport(outputDirectories: Option[Seq[File]] = None, apiUrl: Option[String] = None,
-                 projectTokenOpt: Option[String] = None,
-                 commitUUIDOpt: Option[String] = None): Either[String, Boolean] = {
+  def sendReport(
+      outputDirectories: Option[Seq[File]] = None,
+      apiUrl: Option[String] = None,
+      projectTokenOpt: Option[String] = None,
+      commitUUIDOpt: Option[String] = None
+  ): Either[String, Boolean] = {
 
     FileHelper.withTokenAndCommit(projectTokenOpt, commitUUIDOpt) {
       case (projectToken, commitUUID) =>
@@ -53,11 +56,15 @@ class ResultHelper {
       }
     }
 
-    allReports.groupBy(_.algorithmUUID).map { case (algoUUID, algoReports) =>
-      val results = algoReports.map(_.results).reduceOption(_ ++ _).getOrElse(Seq.empty)
-      val distinctResults = results.distinct
-      ResultReport(algoUUID, commitUUID, distinctResults)
-    }.toSeq
+    allReports
+      .groupBy(_.algorithmUUID)
+      .map {
+        case (algoUUID, algoReports) =>
+          val results = algoReports.map(_.results).reduceOption(_ ++ _).getOrElse(Seq.empty)
+          val distinctResults = results.distinct
+          ResultReport(algoUUID, commitUUID, distinctResults)
+      }
+      .toSeq
   }
 
 }

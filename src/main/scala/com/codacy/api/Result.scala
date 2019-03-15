@@ -1,6 +1,6 @@
 package com.codacy.api
 
-import play.api.libs.json.{Json, Format}
+import play.api.libs.json.{Format, Json}
 
 case class Result(rule: String, filePath: String, line: Int, message: String)
 

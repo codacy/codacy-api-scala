@@ -18,11 +18,14 @@ class GitClient(workDirectory: File) {
   val repository: Option[Repository] = repositoryTry.toOption
 
   def latestCommitUuid(): Option[String] = {
-    repositoryTry.map { rep =>
-      val git = new Git(rep)
-      val headRev = git.log().setMaxCount(1).call().asScala.head
-      headRev.getName
-    }.toOption.filter(_.trim.nonEmpty)
+    repositoryTry
+      .map { rep =>
+        val git = new Git(rep)
+        val headRev = git.log().setMaxCount(1).call().asScala.head
+        headRev.getName
+      }
+      .toOption
+      .filter(_.trim.nonEmpty)
   }
 
   def latestCommitInfo: Try[CommitInfo] = {

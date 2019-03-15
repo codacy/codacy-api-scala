@@ -7,14 +7,14 @@ class FileHelperTest extends FlatSpec with Matchers {
 
   "FileHelper" should "withTokenAndCommit" in {
 
-    val result: Either[String, Boolean] = FileHelper.withTokenAndCommit(projectToken = Some("PROJECT-TOKEN-DUMMY-VALUE")) {
-      case (projectToken, commitUUID) =>
+    val result: Either[String, Boolean] =
+      FileHelper.withTokenAndCommit(projectToken = Some("PROJECT-TOKEN-DUMMY-VALUE")) {
+        case (projectToken, commitUUID) =>
+          projectToken shouldNot be('empty)
+          commitUUID shouldNot be('empty)
 
-        projectToken shouldNot be('empty)
-        commitUUID shouldNot be('empty)
-
-        Right(true)
-    }
+          Right(true)
+      }
 
     result should be('right)
 

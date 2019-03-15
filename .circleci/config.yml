@@ -3,144 +3,166 @@ version: 2
 
 # Re-usable blocks to reduce boilerplate in job definitions.
 references:
-  host_environment_defaults: &host_environment_defaults
-    # Customize the JVM maximum heap limit
-    JAVA_OPTS: -Xmx3200m
 
-  docker_environment_defaults: &docker_environment_defaults
-    # Customize the JVM to read correct memory values
-    JAVA_OPTS: '-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:MaxRAMFraction=1'
+  sbt_jvm_defaults: &sbt_jvm_defaults
+    JAVA_OPTS: -Xmx3g
 
-  default_java_job: &default_java_job
-    docker:
-    - image: circleci/openjdk:8-jdk
-      environment:
-        <<: *docker_environment_defaults
-    environment:
-      <<: *host_environment_defaults
+  default_sbt_job: &default_sbt_job
+    machine: true
     working_directory: ~/workdir
+    environment:
+      <<: *sbt_jvm_defaults
 
-  restore_dependencies: &restore_dependencies
+  restore_sbt_cache: &restore_sbt_cache
     restore_cache:
       keys:
-      - sbt-ivy2-dependencies-1.0.11-{{ checksum "/tmp/dependencies.cache.tmp" }}-extras
-      - sbt-ivy2-dependencies-1.0.11-{{ checksum "/tmp/dependencies.cache.tmp" }}
-      - sbt-ivy2-dependencies-1.0.11
+        - sbt-cache-{{ .Branch }}-{{ checksum "build.sbt" }}-{{ .Environment.CIRCLE_SHA1 }}
+        - sbt-cache-{{ .Branch }}-{{ checksum "build.sbt" }}
+        - sbt-cache-{{ .Branch }}
+        - sbt-cache
 
-  clean_sbt_dependencies_cache: &clean_sbt_dependencies_cache
+  clean_sbt_cache: &clean_sbt_cache
     run:
-      name: Clean sbt dependencies cache
+      name: CleanCache
       command: |
-        find ~/.sbt -name "*.lock" -delete
-        find ~/.ivy2 -name "ivydata-*.properties" -delete
+        find $HOME/.sbt -name "*.lock" | xargs rm | true
+        find $HOME/.ivy2 -name "ivydata-*.properties" | xargs rm | true
 
-  setup_dependencies_key: &setup_dependencies_key
-    run:
-      name: Generate cache key
-      command: |
-        shasum build.sbt \
-          project/plugins.sbt \
-          project/build.properties \
-          project/Dependencies.scala > /tmp/dependencies.cache.tmp
+  save_sbt_cache: &save_sbt_cache
+    save_cache:
+      key: sbt-cache-{{ .Branch }}-{{ checksum "build.sbt" }}-{{ .Environment.CIRCLE_SHA1 }}
+      paths:
+        - "~/.ivy2/cache"
+        - "~/.sbt"
+        - "~/.m2"
 
 jobs:
 
   trigger_test:
-    <<: *default_java_job
+    <<: *default_sbt_job
     steps:
       - checkout
-      - *restore_dependencies
+      - *restore_sbt_cache
       - run:
           name: Test
-          command: ./scripts/test.sh
+          command: sbt test
 
-  checkout_compile:
-    <<: *default_java_job
-    steps:
-    - checkout
-    - attach_workspace:
-        at: ~/workdir
-    - *setup_dependencies_key
-    - *restore_dependencies
-    - run:
-        name: Resolve dependencies
-        command: |
-          sbt update
-    - run:
-        name: Compile
-        command: ./scripts/compile.sh
-    - *clean_sbt_dependencies_cache
-    - save_cache:
-        paths:
-        - ~/.ivy2
-        - ~/.sbt
-        - ~/.m2
-        - ~/.coursier
-        key: sbt-ivy2-dependencies-1.0.11-{{ checksum "/tmp/dependencies.cache.tmp" }}
-    - persist_to_workspace:
-        root: ~/workdir
-        paths:
-        - target
-        - project/target
-        - project/project/target
-
-  test:
-    machine: true
-    environment:
-      <<: *host_environment_defaults
+  checkout_and_version:
+    docker:
+      - image: codacy/git-version:latest
     working_directory: ~/workdir
     steps:
-    - checkout
-    - attach_workspace:
-        at: ~/workdir
-    - *setup_dependencies_key
-    - *restore_dependencies
-    - run:
-        name: Test
-        command: ./scripts/test.sh
+      - checkout
+      - run:
+          name: Set version
+          command: /bin/git-version > .version
+      - run:
+          name: Set Sbt version
+          command: echo "version in ThisBuild := \"$(cat .version)\"" > version.sbt
+      - run:
+          name: Current version
+          command: cat .version
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - workdir/*
 
-  publish_lib:
-    <<: *default_java_job
+  checkfmt:
+    <<: *default_sbt_job
     steps:
-    - checkout
+      - attach_workspace:
+          at: ~/
+      - *restore_sbt_cache
+      - run:
+          name: Check formatting
+          command: sbt ";scalafmt::test;test:scalafmt::test;sbt:scalafmt::test"
+      - *clean_sbt_cache
+      - *save_sbt_cache
+
+  populate_cache:
+    <<: *default_sbt_job
+    steps:
+      - attach_workspace:
+          at: ~/
+      - *restore_sbt_cache
+      - run:
+          name: Safely populate caches
+          command: sbt ";set scalafmtUseIvy in ThisBuild := false;update"
+      - *clean_sbt_cache
+      - *save_sbt_cache
+
+  compile_and_test:
+    <<: *default_sbt_job
+    steps:
+      - attach_workspace:
+          at: ~/
+      - *restore_sbt_cache
+      - run:
+          name: Coverage
+          command: |
+            sbt clean compile coverage test coverageReport coverageAggregate codacyCoverage
+      - *clean_sbt_cache
+      - *save_sbt_cache
+
+  publish:
+    <<: *default_sbt_job
+    steps:
+      - attach_workspace:
+          at: ~/
+      - *restore_sbt_cache
+      - run:
+          name: Publish the library
+          command: |
+            sbt ";clean;retrieveGPGKeys"
+            sbt ";+publishSigned;sonatypeReleaseAll"
+      - *clean_sbt_cache
+      - *save_sbt_cache
+
+  tag_version:
+    <<: *default_sbt_job
+    steps:
     - attach_workspace:
-        at: ~/workdir
-    - *setup_dependencies_key
-    - *restore_dependencies
+        at: ~/
+    - add_ssh_keys:
+        fingerprints:
+          - "df:83:d7:c7:d5:79:06:c2:3b:d1:fd:e2:a3:d1:12:c5"
     - run:
-        name: Install AWS CLI
-        command: |
-          sudo apt -y update
-          sudo apt -y install python3-pip
-          sudo python3 -m pip install awscli
-    - run:
-        name: Setup AWS Credentials
-        command: ./scripts/setup-aws-credentials.sh
-    - run:
-        name: Retrieve GPG Keys
-        command: |
-          mkdir -p ~/.gnupg
-          aws s3 sync --profile shared-services --include '*.gpg' s3://$AWS_CREDENTIALS_BUCKET/gnupg/ ~/.gnupg
-    - run:
-        name: Export publish version
-        command: echo 'export PUBLISH_VERSION="3.1.$CIRCLE_BUILD_NUM"' >> $BASH_ENV
-    - run:
-        name: Publish to Sonatype
-        command: ./scripts/publish_lib.sh $PUBLISH_VERSION
+        name: Tag
+        command: git tag $(cat .version) && git push --tags
 
 workflows:
   version: 2
-  test-and-publish:
+
+  compile_deploy:
     jobs:
-    - checkout_compile
-    - test:
-        requires:
-        - checkout_compile
-    - publish_lib:
+    - checkout_and_version:
+        context: CodacyAWS
+    - populate_cache:
         context: CodacyAWS
         requires:
-        - test
+        - checkout_and_version
+    - checkfmt:
+        context: CodacyAWS
+        requires:
+        - populate_cache
+    - compile_and_test:
+        context: CodacyAWS
+        requires:
+        - populate_cache
+    - publish:
         filters:
           branches:
             only:
             - master
+        context: CodacyAWS
+        requires:
+        - compile_and_test
+        - checkfmt
+    - tag_version:
+        filters:
+          branches:
+            only:
+            - master
+        context: CodacyAWS
+        requires:
+        - publish

@@ -1,71 +1,32 @@
-import Dependencies._
-import sbt.Keys._
-import sbt._
+import codacy.libs._
 
-name := """codacy-api-scala"""
-
-version := "1.0.3-SNAPSHOT"
-
-scalaVersion := "2.10.7"
+name := "codacy-api-scala"
 
 crossScalaVersions := Seq("2.10.7", "2.11.12", "2.12.7")
 
 scalacOptions := Seq("-deprecation", "-feature", "-unchecked", "-Ywarn-adapted-args", "-Xlint", "-Xfatal-warnings")
 
-resolvers += "Typesafe maven repository" at "http://repo.typesafe.com/typesafe/maven-releases/"
+// Runtime dependencies
+libraryDependencies ++= Seq(jodaConvert, jgit, scalajHttp, Dependencies.playJson)
 
-libraryDependencies ++= Seq(
-  jodaConvert,
-  jgit,
-  scalajHttp,
-  playJson,
-  scalaTest
-)
+// Test dependencies
+libraryDependencies ++= Seq(scalatest).map(_ % "test")
 
-organization := "com.codacy"
-
-organizationName := "Codacy"
-
-organizationHomepage := Some(new URL("https://www.codacy.com"))
-
-publishMavenStyle := true
-
-publishArtifact in Test := false
-
-pomIncludeRepository := { _ => false}
-
-publishTo := {
-  val nexus = "https://oss.sonatype.org/"
-  if (version.value.trim.endsWith("SNAPSHOT"))
-    Some("snapshots" at nexus + "content/repositories/snapshots")
-  else
-    Some("releases" at nexus + "service/local/staging/deploy/maven2")
+// HACK: Since we are only using the public resolvers we need to remove the private for it to not fail
+resolvers ~= {
+  _.filterNot(_.name.toLowerCase.contains("codacy"))
 }
 
-credentials += Credentials("Sonatype Nexus Repository Manager",
-  "oss.sonatype.org",
-  sys.env.getOrElse("SONATYPE_USER", "username"),
-  sys.env.getOrElse("SONATYPE_PASSWORD", "password"))
+// HACK: This setting is not picked up properly from the plugin
+pgpPassphrase := Option(System.getenv("SONATYPE_GPG_PASSPHRASE")).map(_.toCharArray)
 
-startYear := Some(2015)
+description := "Client for Codacy API"
 
-description := "Scala wrapper for the Codacy API"
+scmInfo := Some(
+  ScmInfo(url("https://github.com/codacy/codacy-api-scala"), "scm:git:git@github.com:codacy/codacy-api-scala.git")
+)
 
-licenses := Seq("The MIT License (MIT)" -> url("https://raw.githubusercontent.com/codacy/codacy-api-scala/master/LICENSE"))
+publicMvnPublish
 
-homepage := Some(url("http://www.github.com/codacy/codacy-api-scala/"))
-
-pomExtra :=
-  <scm>
-    <url>https://github.com/codacy/sbt-codacy-coverage</url>
-    <connection>scm:git:git@github.com:codacy/sbt-codacy-coverage.git</connection>
-    <developerConnection>scm:git:https://github.com/codacy/sbt-codacy-coverage.git</developerConnection>
-  </scm>
-    <developers>
-      <developer>
-        <id>mrfyda</id>
-        <name>Rafael</name>
-        <email>rafael [at] codacy.com</email>
-        <url>https://github.com/mrfyda</url>
-      </developer>
-    </developers>
+fork in Test := true
+cancelable in Global := true
