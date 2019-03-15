@@ -25,8 +25,7 @@ class ResultHelperTest extends FlatSpec with Matchers {
 
     val writeResult: Boolean = new ResultHelper().writeReportToFile(report, directory)
 
-    writeResult should be (true)
+    writeResult should be(true)
   }
-
 
 }

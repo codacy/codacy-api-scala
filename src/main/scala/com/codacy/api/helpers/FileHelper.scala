@@ -12,28 +12,33 @@ object FileHelper {
 
   private val currentPath = new File(System.getProperty("user.dir"))
 
-  def withTokenAndCommit[T](projectToken: Option[String] = None, commitUUID: Option[String] = None)
-                           (block: (String, String) => Either[String, T]): Either[String, T] = {
+  def withTokenAndCommit[T](projectToken: Option[String] = None, commitUUID: Option[String] = None)(
+      block: (String, String) => Either[String, T]
+  ): Either[String, T] = {
     withCommit(commitUUID) { currentCommitUUID =>
-      projectToken.orElse(sys.env.get("CODACY_PROJECT_TOKEN")).map { codacyProjectToken =>
+      projectToken
+        .orElse(sys.env.get("CODACY_PROJECT_TOKEN"))
+        .map { codacyProjectToken =>
+          block(codacyProjectToken, currentCommitUUID)
 
-        block(codacyProjectToken, currentCommitUUID)
-
-      }.getOrElse {
-        Left("could not find Codacy project token")
-      }
+        }
+        .getOrElse {
+          Left("could not find Codacy project token")
+        }
     }
   }
 
-  def withCommit[T](commitUUID: Option[String] = None)
-                   (block: String => Either[String, T]): Either[String, T] = {
+  def withCommit[T](commitUUID: Option[String] = None)(block: String => Either[String, T]): Either[String, T] = {
     val gitClient = new GitClient(currentPath)
 
-    commitUUID.orElse(gitClient.latestCommitUuid()).map { currentCommitUUID =>
-      block(currentCommitUUID)
-    }.getOrElse {
-      Left("could not retrieve the current commit uuid")
-    }
+    commitUUID
+      .orElse(gitClient.latestCommitUuid())
+      .map { currentCommitUUID =>
+        block(currentCommitUUID)
+      }
+      .getOrElse {
+        Left("could not retrieve the current commit uuid")
+      }
   }
 
   def readJsonFromFile[A](file: File)(implicit reads: Reads[A]): Option[A] = {
