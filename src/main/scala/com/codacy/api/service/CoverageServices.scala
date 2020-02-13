@@ -6,6 +6,16 @@ import play.api.libs.json.Json
 
 class CoverageServices(client: CodacyClient) {
 
+  /**
+    * Send coverage report to Codacy endpoint.
+    * This endpoint requires a project token to authenticate the request and identify the project.
+    * Therefore, the client must be initialized with a valid project token.
+    * @param commitUuid commit unique identifier
+    * @param language programing language
+    * @param coverageReport coverage report being sent to Codacy
+    * @param partial flag that signals if the report operation will be broken in multiple operations
+    * @return Request response
+    */
   def sendReport(
       commitUuid: String,
       language: String,
@@ -14,15 +24,34 @@ class CoverageServices(client: CodacyClient) {
   ): RequestResponse[RequestSuccess] = {
     val endpoint = s"coverage/$commitUuid/${language.toLowerCase}"
 
-    PostRequest(endpoint, coverageReport, partial)
+    postRequest(endpoint, coverageReport, partial)
   }
 
+  /**
+    * Send final notification signaling the end of the report operation.
+    * This endpoint requires an account token to authenticate the request and identify the project.
+    * Therefore, the client must be initialized with a valid account token.
+    * @param commitUuid commit unique identifier
+    * @return Request Response
+    */
   def sendFinalNotification(commitUuid: String): RequestResponse[RequestSuccess] = {
     val endpoint = s"commit/$commitUuid/coverageFinal"
 
-    PostEmptyRequest(endpoint)
+    postEmptyRequest(endpoint)
   }
 
+  /**
+    * Send coverage report with a project name to Codacy endpoint.
+    * This endpoint requires an account token to authenticate the request.
+    * Therefore, the client must be initialized with a valid account token.
+    * @param username reporter's username
+    * @param projectName name of the project the report pertains
+    * @param commitUuid commit unique identifier
+    * @param language programing language
+    * @param coverageReport coverage report being reported
+    * @param partial flag that signals if the report operation will be broken in multiple operations
+    * @return Request Response
+    */
   def sendReportWithProjectName(
       username: String,
       projectName: String,
@@ -32,9 +61,18 @@ class CoverageServices(client: CodacyClient) {
       partial: Boolean = false
   ): RequestResponse[RequestSuccess] = {
     val endpoint = s"$username/$projectName/commit/$commitUuid/coverage/${language.toLowerCase}"
-    PostRequest(endpoint, coverageReport, partial)
+    postRequest(endpoint, coverageReport, partial)
   }
 
+  /**
+    * Send final notification with a project name, signaling the end of the report operation.
+    * This endpoint requires an account token to authenticate the request.
+    * Therefore, the client must be initialized with a valid account token.
+    * @param username reporter's username
+    * @param projectName name of the project the report pertains
+    * @param commitUuid commit unique identifier
+    * @return Request Response
+    */
   def sendFinalWithProjectName(
       username: String,
       projectName: String,
@@ -42,10 +80,10 @@ class CoverageServices(client: CodacyClient) {
   ): RequestResponse[RequestSuccess] = {
     val endpoint = s"$username/$projectName/commit/$commitUuid/coverageFinal"
 
-    PostEmptyRequest(endpoint)
+    postEmptyRequest(endpoint)
   }
 
-  private def PostRequest(endpoint: String, coverageReport: CoverageReport, partial: Boolean) = {
+  private def postRequest(endpoint: String, coverageReport: CoverageReport, partial: Boolean) = {
     val queryParams = getQueryParameters(partial)
 
     val jsonString = serializeCoverageReport(coverageReport)
@@ -53,7 +91,7 @@ class CoverageServices(client: CodacyClient) {
     client.post(Request(endpoint, classOf[RequestSuccess], queryParams), jsonString)
   }
 
-  private def PostEmptyRequest(endpoint: String) =
+  private def postEmptyRequest(endpoint: String) =
     client.post(Request(endpoint, classOf[RequestSuccess]), "{}")
 
   private def getQueryParameters(partial: Boolean) = {
