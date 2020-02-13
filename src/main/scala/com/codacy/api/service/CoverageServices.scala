@@ -13,17 +13,52 @@ class CoverageServices(client: CodacyClient) {
       partial: Boolean = false
   ): RequestResponse[RequestSuccess] = {
     val endpoint = s"coverage/$commitUuid/${language.toLowerCase}"
-    val queryParams = Map("partial" -> partial.toString)
 
-    val jsonString = Json.stringify(Json.toJson(coverageReport))
-
-    client.post(Request(endpoint, classOf[RequestSuccess], queryParams), jsonString)
+    PostRequest(endpoint, coverageReport, partial)
   }
 
   def sendFinalNotification(commitUuid: String): RequestResponse[RequestSuccess] = {
     val endpoint = s"commit/$commitUuid/coverageFinal"
 
-    client.post(Request(endpoint, classOf[RequestSuccess]), "{}")
+    PostEmptyRequest(endpoint)
   }
 
+  def sendReportWithProjectName(
+      username: String,
+      projectName: String,
+      commitUuid: String,
+      language: String,
+      coverageReport: CoverageReport,
+      partial: Boolean = false
+  ): RequestResponse[RequestSuccess] = {
+    val endpoint = s"$username/$projectName/commit/$commitUuid/coverage/${language.toLowerCase}"
+    PostRequest(endpoint, coverageReport, partial)
+  }
+
+  def sendFinalWithProjectName(
+      username: String,
+      projectName: String,
+      commitUuid: String
+  ): RequestResponse[RequestSuccess] = {
+    val endpoint = s"$username/$projectName/commit/$commitUuid/coverageFinal"
+
+    PostEmptyRequest(endpoint)
+  }
+
+  private def PostRequest(endpoint: String, coverageReport: CoverageReport, partial: Boolean) = {
+    val queryParams = getQueryParameters(partial)
+
+    val jsonString = serializeCoverageReport(coverageReport)
+
+    client.post(Request(endpoint, classOf[RequestSuccess], queryParams), jsonString)
+  }
+
+  private def PostEmptyRequest(endpoint: String) =
+    client.post(Request(endpoint, classOf[RequestSuccess]), "{}")
+
+  private def getQueryParameters(partial: Boolean) = {
+    Map("partial" -> partial.toString)
+  }
+  private def serializeCoverageReport(coverageReport: CoverageReport) =
+    Json.stringify(Json.toJson(coverageReport))
 }
