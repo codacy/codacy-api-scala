@@ -2,8 +2,8 @@
 
 Scala wrapper for the Codacy API.
 
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/46749e1408d94e6fbb785201c1eb9bd8)](https://www.codacy.com/app/Codacy/codacy-api-scala?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=codacy/codacy-api-scala&amp;utm_campaign=Badge_Grade)
-[![Codacy Badge](https://api.codacy.com/project/badge/Coverage/46749e1408d94e6fbb785201c1eb9bd8)](https://www.codacy.com/app/Codacy/codacy-api-scala?utm_source=github.com&utm_medium=referral&utm_content=codacy/codacy-api-scala&utm_campaign=Badge_Coverage)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/46749e1408d94e6fbb785201c1eb9bd8)](https://www.codacy.com/gh/codacy/codacy-api-scala?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=codacy/codacy-api-scala&amp;utm_campaign=Badge_Grade)
+[![Codacy Badge](https://api.codacy.com/project/badge/Coverage/46749e1408d94e6fbb785201c1eb9bd8)](https://www.codacy.com/gh/codacy/codacy-api-scala?utm_source=github.com&utm_medium=referral&utm_content=codacy/codacy-api-scala&utm_campaign=Badge_Coverage)
 [![Circle CI](https://circleci.com/gh/codacy/codacy-api-scala/tree/master.svg?style=shield)](https://circleci.com/gh/codacy/codacy-api-scala/tree/master)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.codacy/codacy-api-scala_2.11/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.codacy/codacy-api-scala_2.11)
 
