@@ -2,13 +2,13 @@ package com.codacy.api.client
 
 import play.api.libs.json._
 import com.codacy.api.util.JsonOps
-import com.typesafe.scalalogging.LazyLogging
 import scalaj.http.Http
 
-import scala.util.{Failure, Success, Try}
-
-class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = None, projectToken: Option[String] = None)
-    extends LazyLogging {
+class CodacyClient(
+    apiUrl: Option[String] = None,
+    apiToken: Option[String] = None,
+    projectToken: Option[String] = None
+) {
 
   private case class ErrorJson(error: String)
   private case class PaginatedResult[T](next: Option[String], values: Seq[T])
@@ -103,14 +103,9 @@ class CodacyClient(apiUrl: Option[String] = None, apiToken: Option[String] = Non
   }
 
   private def parseJson(input: String): RequestResponse[JsValue] = {
-    Try(Json.parse(input)) match {
-      case Success(json) =>
-        json
-          .validate[ErrorJson]
-          .fold(_ => SuccessfulResponse(json), apiError => FailedResponse(s"API Error: ${apiError.error}"))
-      case Failure(exception) =>
-        logger.error(s"Failed to parse API response as JSON - $input", exception)
-        FailedResponse("Failed to parse API response as JSON")
-    }
+    val json = Json.parse(input)
+    json
+      .validate[ErrorJson]
+      .fold(_ => SuccessfulResponse(json), apiError => FailedResponse(s"API Error: ${apiError.error}"))
   }
 }
