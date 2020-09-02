@@ -7,7 +7,7 @@ crossScalaVersions := Seq("2.10.7", "2.11.12", "2.12.7")
 scalacOptions := Seq("-deprecation", "-feature", "-unchecked", "-Ywarn-adapted-args", "-Xlint", "-Xfatal-warnings")
 
 // Runtime dependencies
-libraryDependencies ++= Seq(jodaConvert, jgit, scalajHttp, Dependencies.playJson, Dependencies.scalaLogging)
+libraryDependencies ++= Seq(jodaConvert, jgit, scalajHttp, Dependencies.playJson)
 
 // Test dependencies
 libraryDependencies ++= Seq(scalatest).map(_ % "test")
