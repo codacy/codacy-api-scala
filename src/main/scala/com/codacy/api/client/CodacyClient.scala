@@ -5,6 +5,7 @@ import com.codacy.api.util.JsonOps
 import scalaj.http.Http
 
 import scala.util.{Failure, Success, Try}
+import scala.util.control.NonFatal
 
 class CodacyClient(
     apiUrl: Option[String] = None,
@@ -68,27 +69,39 @@ class CodacyClient(
    * Does an API post
    */
   def post[T](request: Request[T], value: String)(implicit reads: Reads[T]): RequestResponse[T] = {
-    val headers = tokens ++ Map("Content-Type" -> "application/json")
+    val url = s"$remoteUrl/${request.endpoint}"
+    try {
+      val headers = tokens ++ Map("Content-Type" -> "application/json")
 
-    val body = Http(s"$remoteUrl/${request.endpoint}")
-      .params(request.queryParameters)
-      .headers(headers)
-      .postData(value)
-      .asString
-      .body
+      val body = Http(url)
+        .params(request.queryParameters)
+        .headers(headers)
+        .postData(value)
+        .asString
+        .body
 
-    parseJsonAs[T](body)
+      parseJsonAs[T](body)
+    } catch {
+      case NonFatal(ex) =>
+        throw new Exception(s"Error doing a post to ${url}", ex)
+    }
   }
 
   private def get(endpoint: String): RequestResponse[JsValue] = {
-    val headers = tokens ++ Map("Content-Type" -> "application/json")
+    val url = s"$remoteUrl/${endpoint}"
+    try {
+      val headers = tokens ++ Map("Content-Type" -> "application/json")
 
-    val body = Http(s"$remoteUrl/$endpoint")
-      .headers(headers)
-      .asString
-      .body
+      val body = Http(url)
+        .headers(headers)
+        .asString
+        .body
 
-    parseJson(body)
+      parseJson(body)
+    } catch {
+      case NonFatal(ex) =>
+        throw new Exception(s"Error doing a get to ${url}", ex)
+    }
   }
 
   private def parseJsonAs[T](input: String)(implicit reads: Reads[T]): RequestResponse[T] = {
