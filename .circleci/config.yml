@@ -100,7 +100,8 @@ jobs:
       - run:
           name: Coverage
           command: |
-            sbt clean compile coverage test coverageReport coverageAggregate codacyCoverage
+            sbt compile coverage test coverageReport
+            bash <(curl -Ls https://coverage.codacy.com/get.sh)
       - *clean_sbt_cache
       - *save_sbt_cache
 
