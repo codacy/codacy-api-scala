@@ -22,7 +22,7 @@ class CoverageServices(client: CodacyClient) {
       coverageReport: CoverageReport,
       partial: Boolean = false
   ): RequestResponse[RequestSuccess] = {
-    val endpoint = s"coverage/$commitUuid/${language.toLowerCase}"
+    val endpoint = s"coverage/$commitUuid/${encodePathSegment(language.toLowerCase)}"
 
     postRequest(endpoint, coverageReport, partial)
   }
@@ -60,7 +60,8 @@ class CoverageServices(client: CodacyClient) {
       coverageReport: CoverageReport,
       partial: Boolean = false
   ): RequestResponse[RequestSuccess] = {
-    val endpoint = s"$username/$projectName/commit/$commitUuid/coverage/${language.toLowerCase}"
+    val endpoint =
+      s"$username/$projectName/commit/$commitUuid/coverage/${encodePathSegment(language.toLowerCase)}"
     postRequest(endpoint, coverageReport, partial)
   }
 
@@ -99,4 +100,12 @@ class CoverageServices(client: CodacyClient) {
   }
   private def serializeCoverageReport(coverageReport: CoverageReport) =
     Json.stringify(Json.toJson(coverageReport))
+
+  /**
+    * Any encoding that we do here, needs to have the same output
+    * of play.utils.UriEncoding.encodePathSegment for our languages.
+    * https://github.com/playframework/playframework/blob/316fbd61c9fc6a6081a3aeef7e773c8bbccd0b6b/core/play/src/main/scala/play/utils/UriEncoding.scala#L50
+    */
+  private def encodePathSegment(segment: String): String = segment.replaceAll(" ", "%20")
+
 }
