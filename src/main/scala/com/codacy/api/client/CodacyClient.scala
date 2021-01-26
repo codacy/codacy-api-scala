@@ -3,6 +3,7 @@ package com.codacy.api.client
 import play.api.libs.json._
 import com.codacy.api.util.JsonOps
 import scalaj.http.Http
+import java.net.URL
 
 import scala.util.{Failure, Success, Try}
 import scala.util.control.NonFatal
@@ -25,7 +26,7 @@ class CodacyClient(
     apiToken.map(t => "api_token" -> t) ++
     projectToken.map(t => "project_token" -> t)
 
-  private val remoteUrl = apiUrl.getOrElse("https://api.codacy.com") + "/2.0"
+  private val remoteUrl = new URL(new URL(apiUrl.getOrElse("https://api.codacy.com")), "/2.0").toString()
 
   /*
    * Does an API request and parses the json output into a class
