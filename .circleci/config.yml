@@ -27,7 +27,7 @@ workflows:
           - populate_cache_and_compile
     - codacy/sbt:
         name: publish
-        cmd: sbt retrieveGPGKeys +publishSigned sonatypeReleaseAll
+        cmd: sbt retrieveGPGKeys +publishSigned sonatypeBundleRelease
         filters:
           branches:
             only:
