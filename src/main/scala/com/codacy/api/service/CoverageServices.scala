@@ -1,7 +1,7 @@
 package com.codacy.api.service
 
 import com.codacy.api.client.{CodacyClient, Request, RequestResponse, RequestSuccess}
-import com.codacy.api.CoverageReport
+import com.codacy.api.{CoverageReport, OrganizationProvider}
 import play.api.libs.json.Json
 
 class CoverageServices(client: CodacyClient) {
@@ -53,6 +53,7 @@ class CoverageServices(client: CodacyClient) {
     * @return Request Response
     */
   def sendReportWithProjectName(
+      provider: OrganizationProvider.Value,
       username: String,
       projectName: String,
       commitUuid: String,
@@ -61,7 +62,7 @@ class CoverageServices(client: CodacyClient) {
       partial: Boolean = false
   ): RequestResponse[RequestSuccess] = {
     val endpoint =
-      s"$username/$projectName/commit/$commitUuid/coverage/${encodePathSegment(language.toLowerCase)}"
+      s"${provider.toString}/$username/$projectName/commit/$commitUuid/coverage/${encodePathSegment(language.toLowerCase)}"
     postRequest(endpoint, coverageReport, partial)
   }
 
@@ -75,11 +76,12 @@ class CoverageServices(client: CodacyClient) {
     * @return Request Response
     */
   def sendFinalWithProjectName(
+      provider: OrganizationProvider.Value,
       username: String,
       projectName: String,
       commitUuid: String
   ): RequestResponse[RequestSuccess] = {
-    val endpoint = s"$username/$projectName/commit/$commitUuid/coverageFinal"
+    val endpoint = s"${provider.toString}/$username/$projectName/commit/$commitUuid/coverageFinal"
 
     postEmptyRequest(endpoint)
   }
