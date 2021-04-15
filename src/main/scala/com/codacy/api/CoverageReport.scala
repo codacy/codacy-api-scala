@@ -15,3 +15,7 @@ object CoverageReport {
   implicit val coverageFileReportWrites: Writes[CoverageFileReport] = Json.writes[CoverageFileReport]
   implicit val coverageReportWrites: Writes[CoverageReport] = Json.writes[CoverageReport]
 }
+
+object OrganizationProvider extends Enumeration {
+  val manual, gh, bb, ghe, bbe, gl, gle = Value
+}
