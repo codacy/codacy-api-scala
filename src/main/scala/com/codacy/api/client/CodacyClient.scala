@@ -69,12 +69,20 @@ class CodacyClient(
   /*
    * Does an API post
    */
-  def post[T](request: Request[T], value: String)(implicit reads: Reads[T]): RequestResponse[T] = {
+  def post[T](request: Request[T], value: String, timeoutOpt: Option[RequestTimeout] = None)(
+      implicit reads: Reads[T]
+  ): RequestResponse[T] = {
     val url = s"$remoteUrl/${request.endpoint}"
     try {
       val headers = tokens ++ Map("Content-Type" -> "application/json")
 
-      val body = Http(url)
+      val httpRequest = timeoutOpt match {
+        case Some(timeout) =>
+          Http(url).timeout(connTimeoutMs = timeout.connTimeoutMs, readTimeoutMs = timeout.readTimeoutMs)
+        case None => Http(url)
+      }
+
+      val body = httpRequest
         .params(request.queryParameters)
         .headers(headers)
         .postData(value)

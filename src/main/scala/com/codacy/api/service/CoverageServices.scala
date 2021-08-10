@@ -1,6 +1,6 @@
 package com.codacy.api.service
 
-import com.codacy.api.client.{CodacyClient, Request, RequestResponse, RequestSuccess}
+import com.codacy.api.client.{CodacyClient, Request, RequestResponse, RequestSuccess, RequestTimeout}
 import com.codacy.api.{CoverageReport, OrganizationProvider}
 import play.api.libs.json.Json
 
@@ -14,17 +14,19 @@ class CoverageServices(client: CodacyClient) {
     * @param language programing language
     * @param coverageReport coverage report being sent to Codacy
     * @param partial flag that signals if the report operation will be broken in multiple operations
+    * @param timeoutOpt socket connection and read timeouts in milliseconds
     * @return Request response
     */
   def sendReport(
       commitUuid: String,
       language: String,
       coverageReport: CoverageReport,
-      partial: Boolean = false
+      partial: Boolean = false,
+      timeoutOpt: Option[RequestTimeout] = None
   ): RequestResponse[RequestSuccess] = {
     val endpoint = s"coverage/$commitUuid/${encodePathSegment(language.toLowerCase)}"
 
-    postRequest(endpoint, coverageReport, partial)
+    postRequest(endpoint, coverageReport, partial, timeoutOpt)
   }
 
   /**
@@ -32,12 +34,16 @@ class CoverageServices(client: CodacyClient) {
     * This endpoint requires an account token to authenticate the request and identify the project.
     * Therefore, the client must be initialized with a valid account token.
     * @param commitUuid commit unique identifier
+    * @param timeoutOpt socket connection and read timeouts in milliseconds
     * @return Request Response
     */
-  def sendFinalNotification(commitUuid: String): RequestResponse[RequestSuccess] = {
+  def sendFinalNotification(
+      commitUuid: String,
+      timeoutOpt: Option[RequestTimeout] = None
+  ): RequestResponse[RequestSuccess] = {
     val endpoint = s"commit/$commitUuid/coverageFinal"
 
-    postEmptyRequest(endpoint)
+    postEmptyRequest(endpoint, timeoutOpt)
   }
 
   /**
@@ -50,6 +56,7 @@ class CoverageServices(client: CodacyClient) {
     * @param language programing language
     * @param coverageReport coverage report being reported
     * @param partial flag that signals if the report operation will be broken in multiple operations
+    * @param timeoutOpt socket connection and read timeouts in milliseconds
     * @return Request Response
     */
   def sendReportWithProjectName(
@@ -59,11 +66,12 @@ class CoverageServices(client: CodacyClient) {
       commitUuid: String,
       language: String,
       coverageReport: CoverageReport,
-      partial: Boolean = false
+      partial: Boolean = false,
+      timeoutOpt: Option[RequestTimeout] = None
   ): RequestResponse[RequestSuccess] = {
     val endpoint =
       s"${provider.toString}/$username/$projectName/commit/$commitUuid/coverage/${encodePathSegment(language.toLowerCase)}"
-    postRequest(endpoint, coverageReport, partial)
+    postRequest(endpoint, coverageReport, partial, timeoutOpt)
   }
 
   /**
@@ -73,29 +81,36 @@ class CoverageServices(client: CodacyClient) {
     * @param username reporter's username
     * @param projectName name of the project the report pertains
     * @param commitUuid commit unique identifier
+    * @param timeoutOpt socket connection and read timeouts in milliseconds
     * @return Request Response
     */
   def sendFinalWithProjectName(
       provider: OrganizationProvider.Value,
       username: String,
       projectName: String,
-      commitUuid: String
+      commitUuid: String,
+      timeoutOpt: Option[RequestTimeout] = None
   ): RequestResponse[RequestSuccess] = {
     val endpoint = s"${provider.toString}/$username/$projectName/commit/$commitUuid/coverageFinal"
 
-    postEmptyRequest(endpoint)
+    postEmptyRequest(endpoint, timeoutOpt)
   }
 
-  private def postRequest(endpoint: String, coverageReport: CoverageReport, partial: Boolean) = {
+  private def postRequest(
+      endpoint: String,
+      coverageReport: CoverageReport,
+      partial: Boolean,
+      timeoutOpt: Option[RequestTimeout]
+  ) = {
     val queryParams = getQueryParameters(partial)
 
     val jsonString = serializeCoverageReport(coverageReport)
 
-    client.post(Request(endpoint, classOf[RequestSuccess], queryParams), jsonString)
+    client.post(Request(endpoint, classOf[RequestSuccess], queryParams), jsonString, timeoutOpt)
   }
 
-  private def postEmptyRequest(endpoint: String) =
-    client.post(Request(endpoint, classOf[RequestSuccess]), "{}")
+  private def postEmptyRequest(endpoint: String, timeoutOpt: Option[RequestTimeout]) =
+    client.post(Request(endpoint, classOf[RequestSuccess]), "{}", timeoutOpt)
 
   private def getQueryParameters(partial: Boolean) = {
     Map("partial" -> partial.toString)

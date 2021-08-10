@@ -2,9 +2,8 @@ package com.codacy.api.helpers
 
 import java.io.File
 import java.util.UUID
-
 import com.codacy.api.ResultReport
-import com.codacy.api.client.{CodacyClient, FailedResponse, SuccessfulResponse}
+import com.codacy.api.client.{CodacyClient, FailedResponse, RequestTimeout, SuccessfulResponse}
 import com.codacy.api.service.ResultServices
 
 class ResultHelper {
@@ -24,7 +23,8 @@ class ResultHelper {
       outputDirectories: Option[Seq[File]] = None,
       apiUrl: Option[String] = None,
       projectTokenOpt: Option[String] = None,
-      commitUUIDOpt: Option[String] = None
+      commitUUIDOpt: Option[String] = None,
+      timeoutOpt: Option[RequestTimeout] = None
   ): Either[String, Boolean] = {
 
     FileHelper.withTokenAndCommit(projectTokenOpt, commitUUIDOpt) {
@@ -33,7 +33,7 @@ class ResultHelper {
         val resultServices = new ResultServices(codacyClient)
 
         val requestResponses = readReports(commitUUID, outputDirectories).map { resultReport =>
-          val response = resultServices.sendResults(commitUUID, resultReport)
+          val response = resultServices.sendResults(commitUUID, resultReport, timeoutOpt)
           response match {
             case FailedResponse(message) => Left(message)
             case _: SuccessfulResponse[_] => Right(true)
