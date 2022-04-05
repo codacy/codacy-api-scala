@@ -2,8 +2,7 @@ import codacy.libs._
 
 name := "codacy-api-scala"
 
-crossScalaVersions := Seq("2.10.7", "2.11.12", "2.12.7")
-
+scalaVersion := "2.12.15"
 scalacOptions := Seq("-deprecation", "-feature", "-unchecked", "-Ywarn-adapted-args", "-Xlint", "-Xfatal-warnings")
 
 // Runtime dependencies

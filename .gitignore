@@ -21,3 +21,5 @@ npm-debug.log
 config
 
 .vscode
+.bsp
+.metals
