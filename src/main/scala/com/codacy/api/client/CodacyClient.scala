@@ -3,8 +3,8 @@ package com.codacy.api.client
 import play.api.libs.json._
 import com.codacy.api.util.JsonOps
 import scalaj.http.Http
-import java.net.URL
 
+import java.net.{SocketTimeoutException, URL}
 import scala.util.{Failure, Success, Try}
 import scala.util.control.NonFatal
 
@@ -93,6 +93,8 @@ class CodacyClient(
     } catch {
       case NonFatal(ex) =>
         throw new Exception(s"Error doing a post to ${url}", ex)
+      case SocketTimeoutException(ex) =>
+        throw new Exception(s"Timeout error while doing a post to ${url}", ex)
     }
   }
 
