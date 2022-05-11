@@ -3,8 +3,8 @@ package com.codacy.api.client
 import play.api.libs.json._
 import com.codacy.api.util.JsonOps
 import scalaj.http.Http
-import java.net.URL
 
+import java.net.URL
 import scala.util.{Failure, Success, Try}
 import scala.util.control.NonFatal
 
@@ -92,7 +92,7 @@ class CodacyClient(
       parseJsonAs[T](body)
     } catch {
       case NonFatal(ex) =>
-        throw new Exception(s"Error doing a post to ${url}", ex)
+        RequestResponse.failure(s"Error doing a post to ${url} : ${ex.getMessage}")
     }
   }
 
