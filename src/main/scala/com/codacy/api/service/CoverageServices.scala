@@ -100,17 +100,24 @@ class CoverageServices(client: CodacyClient) {
       endpoint: String,
       coverageReport: CoverageReport,
       partial: Boolean,
-      timeoutOpt: Option[RequestTimeout]
+      timeoutOpt: Option[RequestTimeout],
+      sleepTime: Option[Int],
+      noRetries: Option[Int]
   ) = {
     val queryParams = getQueryParameters(partial)
 
     val jsonString = serializeCoverageReport(coverageReport)
 
-    client.post(Request(endpoint, classOf[RequestSuccess], queryParams), jsonString, timeoutOpt)
+    client.post(Request(endpoint, classOf[RequestSuccess], queryParams), jsonString, timeoutOpt, sleepTime, noRetries)
   }
 
-  private def postEmptyRequest(endpoint: String, timeoutOpt: Option[RequestTimeout]) =
-    client.post(Request(endpoint, classOf[RequestSuccess]), "{}", timeoutOpt)
+  private def postEmptyRequest(
+      endpoint: String,
+      timeoutOpt: Option[RequestTimeout],
+      sleepTime: Option[Int],
+      noRetries: Option[Int]
+  ) =
+    client.post(Request(endpoint, classOf[RequestSuccess]), "{}", timeoutOpt, sleepTime, noRetries)
 
   private def getQueryParameters(partial: Boolean) = {
     Map("partial" -> partial.toString)

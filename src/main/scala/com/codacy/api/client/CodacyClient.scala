@@ -69,9 +69,13 @@ class CodacyClient(
   /*
    * Does an API post
    */
-  def post[T](request: Request[T], value: String, timeoutOpt: Option[RequestTimeout] = None)(
-      implicit reads: Reads[T]
-  ): RequestResponse[T] = {
+  def post[T](
+      request: Request[T],
+      value: String,
+      timeoutOpt: Option[RequestTimeout] = None,
+      sleepTime: Option[Int],
+      noRetries: Option[Int]
+  )(implicit reads: Reads[T]): RequestResponse[T] = {
     val url = s"$remoteUrl/${request.endpoint}"
     try {
       val headers = tokens ++ Map("Content-Type" -> "application/json")
@@ -92,7 +96,11 @@ class CodacyClient(
       parseJsonAs[T](body)
     } catch {
       case NonFatal(ex) =>
-        RequestResponse.failure(s"Error doing a post to ${url} : ${ex.getMessage}")
+        if (noRetries.get > 0) {
+          post(request, value, timeoutOpt, sleepTime, Option(noRetries.get - 1))
+        } else {
+          RequestResponse.failure(s"Error doing a post to ${url} : ${ex.getMessage}")
+        }
     }
   }
 
