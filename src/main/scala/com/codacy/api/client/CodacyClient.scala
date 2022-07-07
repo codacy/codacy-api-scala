@@ -96,9 +96,8 @@ class CodacyClient(
       parseJsonAs[T](body)
     } catch {
       case NonFatal(ex) =>
-        val zero: Option[Int] = Some(0)
-        (noRetries, zero) match {
-          case (Some(noRetries), Some(zero)) if noRetries.>(zero) =>
+        (noRetries, Some(0)) match {
+          case (Some(noRetries), Some(0)) if noRetries.>(0) =>
             post(request, value, timeoutOpt, sleepTime, Option(noRetries.-(1)))
           case _ =>
             RequestResponse.failure(s"Error doing a post to ${url} : ${ex.getMessage}")
