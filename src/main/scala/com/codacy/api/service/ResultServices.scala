@@ -17,7 +17,7 @@ class ResultServices(client: CodacyClient) {
 
     val value = Json.stringify(Json.toJson(resultReport))
 
-    client.post(Request(endpoint, classOf[RequestSuccess]), value, timeoutOpt, sleepTime, noRetries) // set as none
+    client.post(Request(endpoint, classOf[RequestSuccess]), value, timeoutOpt, sleepTime, noRetries)
   }
 
 }
