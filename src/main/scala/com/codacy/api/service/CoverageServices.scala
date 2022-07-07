@@ -22,11 +22,13 @@ class CoverageServices(client: CodacyClient) {
       language: String,
       coverageReport: CoverageReport,
       partial: Boolean = false,
-      timeoutOpt: Option[RequestTimeout] = None
+      timeoutOpt: Option[RequestTimeout] = None,
+      sleepTime: Option[Int] = None,
+      noRetries: Option[Int] = None,
   ): RequestResponse[RequestSuccess] = {
     val endpoint = s"coverage/$commitUuid/${encodePathSegment(language.toLowerCase)}"
 
-    postRequest(endpoint, coverageReport, partial, timeoutOpt)
+    postRequest(endpoint, coverageReport, partial, timeoutOpt, sleepTime, noRetries)
   }
 
   /**
@@ -39,11 +41,13 @@ class CoverageServices(client: CodacyClient) {
     */
   def sendFinalNotification(
       commitUuid: String,
-      timeoutOpt: Option[RequestTimeout] = None
+      timeoutOpt: Option[RequestTimeout] = None,
+      sleepTime: Option[Int] = None,
+      noRetries: Option[Int] = None,
   ): RequestResponse[RequestSuccess] = {
     val endpoint = s"commit/$commitUuid/coverageFinal"
 
-    postEmptyRequest(endpoint, timeoutOpt)
+    postEmptyRequest(endpoint, timeoutOpt, sleepTime, noRetries)
   }
 
   /**
@@ -67,11 +71,13 @@ class CoverageServices(client: CodacyClient) {
       language: String,
       coverageReport: CoverageReport,
       partial: Boolean = false,
-      timeoutOpt: Option[RequestTimeout] = None
+      timeoutOpt: Option[RequestTimeout] = None,
+      sleepTime: Option[Int] = None,
+      noRetries: Option[Int] = None,
   ): RequestResponse[RequestSuccess] = {
     val endpoint =
       s"${provider.toString}/$username/$projectName/commit/$commitUuid/coverage/${encodePathSegment(language.toLowerCase)}"
-    postRequest(endpoint, coverageReport, partial, timeoutOpt)
+    postRequest(endpoint, coverageReport, partial, timeoutOpt, sleepTime, noRetries)
   }
 
   /**
@@ -89,11 +95,13 @@ class CoverageServices(client: CodacyClient) {
       username: String,
       projectName: String,
       commitUuid: String,
-      timeoutOpt: Option[RequestTimeout] = None
+      timeoutOpt: Option[RequestTimeout] = None,
+      sleepTime: Option[Int] = None,
+      noRetries: Option[Int] = None
   ): RequestResponse[RequestSuccess] = {
     val endpoint = s"${provider.toString}/$username/$projectName/commit/$commitUuid/coverageFinal"
 
-    postEmptyRequest(endpoint, timeoutOpt)
+    postEmptyRequest(endpoint, timeoutOpt, sleepTime, noRetries)
   }
 
   private def postRequest(
