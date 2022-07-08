@@ -5,7 +5,6 @@ import com.codacy.api.util.JsonOps
 import scalaj.http.Http
 
 import java.net.URL
-import scala.math.Ordered.orderingToOrdered
 import scala.util.{Failure, Success, Try}
 import scala.util.control.NonFatal
 
