@@ -24,11 +24,11 @@ class CoverageServices(client: CodacyClient) {
       partial: Boolean = false,
       timeoutOpt: Option[RequestTimeout] = None,
       sleepTime: Option[Int] = None,
-      noRetries: Option[Int] = None,
+      numRetries: Option[Int] = None,
   ): RequestResponse[RequestSuccess] = {
     val endpoint = s"coverage/$commitUuid/${encodePathSegment(language.toLowerCase)}"
 
-    postRequest(endpoint, coverageReport, partial, timeoutOpt, sleepTime, noRetries)
+    postRequest(endpoint, coverageReport, partial, timeoutOpt, sleepTime, numRetries)
   }
 
   /**
@@ -43,11 +43,11 @@ class CoverageServices(client: CodacyClient) {
       commitUuid: String,
       timeoutOpt: Option[RequestTimeout] = None,
       sleepTime: Option[Int] = None,
-      noRetries: Option[Int] = None,
+      numRetries: Option[Int] = None,
   ): RequestResponse[RequestSuccess] = {
     val endpoint = s"commit/$commitUuid/coverageFinal"
 
-    postEmptyRequest(endpoint, timeoutOpt, sleepTime, noRetries)
+    postEmptyRequest(endpoint, timeoutOpt, sleepTime, numRetries)
   }
 
   /**
@@ -73,11 +73,11 @@ class CoverageServices(client: CodacyClient) {
       partial: Boolean = false,
       timeoutOpt: Option[RequestTimeout] = None,
       sleepTime: Option[Int] = None,
-      noRetries: Option[Int] = None,
+      numRetries: Option[Int] = None,
   ): RequestResponse[RequestSuccess] = {
     val endpoint =
       s"${provider.toString}/$username/$projectName/commit/$commitUuid/coverage/${encodePathSegment(language.toLowerCase)}"
-    postRequest(endpoint, coverageReport, partial, timeoutOpt, sleepTime, noRetries)
+    postRequest(endpoint, coverageReport, partial, timeoutOpt, sleepTime, numRetries)
   }
 
   /**
@@ -97,11 +97,11 @@ class CoverageServices(client: CodacyClient) {
       commitUuid: String,
       timeoutOpt: Option[RequestTimeout] = None,
       sleepTime: Option[Int] = None,
-      noRetries: Option[Int] = None
+      numRetries: Option[Int] = None
   ): RequestResponse[RequestSuccess] = {
     val endpoint = s"${provider.toString}/$username/$projectName/commit/$commitUuid/coverageFinal"
 
-    postEmptyRequest(endpoint, timeoutOpt, sleepTime, noRetries)
+    postEmptyRequest(endpoint, timeoutOpt, sleepTime, numRetries)
   }
 
   private def postRequest(
@@ -110,22 +110,22 @@ class CoverageServices(client: CodacyClient) {
       partial: Boolean,
       timeoutOpt: Option[RequestTimeout],
       sleepTime: Option[Int],
-      noRetries: Option[Int]
+      numRetries: Option[Int]
   ) = {
     val queryParams = getQueryParameters(partial)
 
     val jsonString = serializeCoverageReport(coverageReport)
 
-    client.post(Request(endpoint, classOf[RequestSuccess], queryParams), jsonString, timeoutOpt, sleepTime, noRetries)
+    client.post(Request(endpoint, classOf[RequestSuccess], queryParams), jsonString, timeoutOpt, sleepTime, numRetries)
   }
 
   private def postEmptyRequest(
       endpoint: String,
       timeoutOpt: Option[RequestTimeout],
       sleepTime: Option[Int],
-      noRetries: Option[Int]
+      numRetries: Option[Int]
   ) =
-    client.post(Request(endpoint, classOf[RequestSuccess]), "{}", timeoutOpt, sleepTime, noRetries)
+    client.post(Request(endpoint, classOf[RequestSuccess]), "{}", timeoutOpt, sleepTime, numRetries)
 
   private def getQueryParameters(partial: Boolean) = {
     Map("partial" -> partial.toString)

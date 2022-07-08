@@ -5,6 +5,7 @@ import com.codacy.api.util.JsonOps
 import scalaj.http.Http
 
 import java.net.URL
+import scala.math.Ordered.orderingToOrdered
 import scala.util.{Failure, Success, Try}
 import scala.util.control.NonFatal
 
@@ -74,7 +75,7 @@ class CodacyClient(
       value: String,
       timeoutOpt: Option[RequestTimeout] = None,
       sleepTime: Option[Int],
-      noRetries: Option[Int]
+      numRetries: Option[Int]
   )(implicit reads: Reads[T]): RequestResponse[T] = {
     val url = s"$remoteUrl/${request.endpoint}"
     try {
@@ -96,11 +97,10 @@ class CodacyClient(
       parseJsonAs[T](body)
     } catch {
       case NonFatal(ex) =>
-        (noRetries, Some(0)) match {
-          case (Some(noRetries), Some(0)) if noRetries.>(0) =>
-            post(request, value, timeoutOpt, sleepTime, Option(noRetries.-(1)))
-          case _ =>
-            RequestResponse.failure(s"Error doing a post to ${url} : ${ex.getMessage}")
+        if (numRetries.exists(x => x > 0)) {
+          post(request, value, timeoutOpt, sleepTime, numRetries.map(x => x - 1))
+        } else {
+          RequestResponse.failure(s"Error doing a post to ${url} : ${ex.getMessage}")
         }
     }
   }

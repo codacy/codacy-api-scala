@@ -11,13 +11,13 @@ class ResultServices(client: CodacyClient) {
       resultReport: ResultReport,
       timeoutOpt: Option[RequestTimeout] = None,
       sleepTime: Option[Int] = None,
-      noRetries: Option[Int] = None
+      numRetries: Option[Int] = None
   ): RequestResponse[RequestSuccess] = {
     val endpoint = s"/commit/$commitUuid/results"
 
     val value = Json.stringify(Json.toJson(resultReport))
 
-    client.post(Request(endpoint, classOf[RequestSuccess]), value, timeoutOpt, sleepTime, noRetries)
+    client.post(Request(endpoint, classOf[RequestSuccess]), value, timeoutOpt, sleepTime, numRetries)
   }
 
 }
