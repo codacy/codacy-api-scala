@@ -97,6 +97,7 @@ class CodacyClient(
     } catch {
       case NonFatal(ex) =>
         if (numRetries.exists(x => x > 0)) {
+          sleepTime.map(x => Thread.sleep(x))
           post(request, value, timeoutOpt, sleepTime, numRetries.map(x => x - 1))
         } else {
           RequestResponse.failure(s"Error doing a post to ${url} : ${ex.getMessage}")
