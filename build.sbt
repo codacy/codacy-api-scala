@@ -1,15 +1,13 @@
-import codacy.libs._
-
 name := "codacy-api-scala"
 
 scalaVersion := "2.12.15"
 scalacOptions := Seq("-deprecation", "-feature", "-unchecked", "-Ywarn-adapted-args", "-Xlint", "-Xfatal-warnings")
 
 // Runtime dependencies
-libraryDependencies ++= Seq(jodaConvert, jgit, scalajHttp, Dependencies.playJson)
+libraryDependencies ++= Seq(Dependencies.jodaConvert, Dependencies.jgit, Dependencies.scalajHttp, Dependencies.playJson)
 
 // Test dependencies
-libraryDependencies ++= Seq(scalatest).map(_ % "test")
+libraryDependencies ++= Seq(Dependencies.scalatest).map(_ % "test")
 
 // HACK: Since we are only using the public resolvers we need to remove the private for it to not fail
 resolvers ~= {
