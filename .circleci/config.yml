@@ -17,7 +17,7 @@ workflows:
           - codacy/checkout_and_version
     - codacy/sbt:
         name: checkfmt
-        cmd: sbt scalafmt test:scalafmt sbt:scalafmt
+        cmd: sbt scalafmtCheckAll
         requires:
           - populate_cache_and_compile
     - codacy/sbt:
