@@ -1,6 +1,6 @@
 name := "codacy-api-scala"
 
-scalaVersion := "2.12.15"
+scalaVersion := "2.12.20"
 scalacOptions := Seq("-deprecation", "-feature", "-unchecked", "-Ywarn-adapted-args", "-Xlint", "-Xfatal-warnings")
 
 // Runtime dependencies

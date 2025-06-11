@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  codacy: codacy/base@6.3.0
+  codacy: codacy/base@12.2.0
 
 workflows:
   version: 2
@@ -27,7 +27,7 @@ workflows:
           - populate_cache_and_compile
     - codacy/sbt:
         name: publish
-        cmd: sbt retrieveGPGKeys +publishSigned sonatypeBundleRelease
+        cmd: sbt retrieveGPGKeys +publishSigned sonatypeCentralRelease
         filters:
           branches:
             only:
