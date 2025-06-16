@@ -4,7 +4,7 @@ import play.api.libs.json._
 import com.codacy.api.util.JsonOps
 import scalaj.http.Http
 
-import java.net.{URI}
+import java.net.URI
 import scala.util.{Failure, Success, Try}
 import scala.util.control.NonFatal
 
