@@ -23,7 +23,7 @@ scmInfo := Some(
   ScmInfo(url("https://github.com/codacy/codacy-api-scala"), "scm:git:git@github.com:codacy/codacy-api-scala.git")
 )
 
-publicMvnPublish
+privateMvnPublish
 
 fork in Test := true
 cancelable in Global := true
