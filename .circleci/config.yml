@@ -27,6 +27,7 @@ workflows:
           - populate_cache_and_compile
     - codacy/sbt:
         name: publish
+        aws_profile: maven
         cmd: sbt +publish
         filters:
           branches:
